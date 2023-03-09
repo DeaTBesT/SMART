@@ -11,19 +11,32 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private int areaSizeX;
     [SerializeField] private int areaSizeY;
 
+    private int currentPlayer;
+    private int GetCurrentPlayer
+    {
+        get
+        {
+            return (currentPlayer + players.Length) % players.Length;
+        }
+    }
+
+    public int Players => players.Length;
+
     private void Start()
     {
         Invoke(nameof(StartGame), isDebug ? 0 : 3);
+        SetCorners();
     }
 
     private void StartGame()
     {
-        GenerateArea().Controller = players[isDebug ? 0 : 1];
+        GenerateArea().Controller = players[GetCurrentPlayer];
     }
 
     public void EndMove()
     {
-        
+        currentPlayer++;
+        GenerateArea().Controller = players[GetCurrentPlayer];
     }
 
     private Area GenerateArea()
@@ -35,5 +48,15 @@ public class GameManager : Singleton<GameManager>
         newArea.GenerateArea(cellPrefab, sizeX, sizeY);
 
         return newArea;
+    }
+
+    private void SetCorners()
+    {
+        for (int i = 0; i < Players; i++)
+        {
+            int currentCorner = (i + Players) % Players + 1;
+
+            MapBuilder.Instance.Corners[currentCorner].areaCorner.Controller = players[i];
+        }
     }
 }

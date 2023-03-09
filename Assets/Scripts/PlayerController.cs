@@ -10,6 +10,7 @@ public class PlayerController : Controller
     [SerializeField] private float timeDelay;
 
     private bool isFirstPressed = false;
+    private bool isAreaMoving = false;
 
     private Vector2 offset;
 
@@ -24,38 +25,55 @@ public class PlayerController : Controller
     {
         if ((Input.GetMouseButtonDown(0)) && (CurrentArea != null))
         {
-            if (!isFirstPressed)
+            if (CastRay(areaLayer))
             {
-                //StartCoroutine(PressDelay());
-            }
-            else
-            {
-                CurrentArea = null;
+                Area area = CastRay(areaLayer).transform.GetComponentInParent<Area>();
+
+                if ((area != null) && (!area.IsPlaced))
+                {
+                    if (!isFirstPressed)
+                    {
+                        StartCoroutine(PressDelay());
+                    }
+                    else
+                    {
+                        CurrentArea.PlacingArea();
+                        StopAllCoroutines();
+                        isFirstPressed = false;
+                    }
+                }
             }
         }
-        else if (Input.GetMouseButtonDown(0))
+
+        if (Input.GetMouseButtonDown(0))
         {
             if (CastRay(areaLayer))
             {
                 Vector2 point = CastRay(areaLayer).point;
-                CastRay(areaLayer).transform.TryGetComponent(out Area area);
-                CurrentArea = area;
-                offset = (Vector2)CurrentArea.transform.position - point;
+                CastRay(areaLayer).transform.TryGetComponent(out AreaCollider aCollider);
+                Area area = aCollider.GetArea;
+
+                if ((area != null) && (!area.IsPlaced))
+                {
+                    CurrentArea = area;
+                    offset = (Vector2)CurrentArea.transform.position - point;
+                    isAreaMoving = true;
+                }
             }
         }
         else if (Input.GetMouseButtonUp(0))
         {
-            CurrentArea = null;
+            isAreaMoving = false;
         }
 
         if (Input.GetMouseButton(0))
         {
-            if ((CastRay(groundMask)) && (CurrentArea != null))
+            if ((CastRay(groundMask)) && (CurrentArea != null) && (isAreaMoving))
             {
                 Vector2 point = CastRay(groundMask).point;
-                
+                              
+                CurrentArea.SetPivotPosition();
                 CurrentArea.transform.position = point + offset;
-                CurrentArea.SetPivotPosition(new Vector2(Mathf.RoundToInt(point.x), Mathf.RoundToInt(point.y)));
             }
         }
     }
