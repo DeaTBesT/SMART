@@ -16,6 +16,9 @@ public class MapBuilder : Singleton<MapBuilder>
     private GameObject parentMap;
     private Camera _camera;
 
+    public int MapSizeX => sizeX;
+    public int MapSizeY => sizeY;
+
     public Corner[] Corners => corners;
     private Corner[] corners;
 

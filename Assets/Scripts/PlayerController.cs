@@ -16,18 +16,26 @@ public class PlayerController : Controller
 
     private Camera _camera;
 
+    private int mapSizeX;
+    private int mapSizeY;
+
     private void Start()
     {
         _camera = Camera.main;
+
+        mapSizeX = MapBuilder.Instance.MapSizeX;
+        mapSizeY = MapBuilder.Instance.MapSizeY;
     }
 
     private void Update()
     {
         if ((Input.GetMouseButtonDown(0)) && (CurrentArea != null))
         {
-            if (CastRay(areaLayer))
+            RaycastHit2D hit = CastRay(areaLayer);
+
+            if (hit)
             {
-                Area area = CastRay(areaLayer).transform.GetComponentInParent<Area>();
+                Area area = hit.transform.GetComponentInParent<Area>();
 
                 if ((area != null) && (!area.IsPlaced))
                 {
@@ -47,10 +55,12 @@ public class PlayerController : Controller
 
         if (Input.GetMouseButtonDown(0))
         {
-            if (CastRay(areaLayer))
+            RaycastHit2D hit = CastRay(areaLayer);
+
+            if (hit)
             {
-                Vector2 point = CastRay(areaLayer).point;
-                CastRay(areaLayer).transform.TryGetComponent(out AreaCollider aCollider);
+                Vector2 point = hit.point;
+                hit.transform.TryGetComponent(out AreaCollider aCollider);
                 Area area = aCollider.GetArea;
 
                 if ((area != null) && (!area.IsPlaced))
@@ -68,12 +78,31 @@ public class PlayerController : Controller
 
         if (Input.GetMouseButton(0))
         {
-            if ((CastRay(groundMask)) && (CurrentArea != null) && (isAreaMoving))
+            RaycastHit2D hit = CastRay(groundMask);
+
+            if ((hit) && (CurrentArea != null) && (isAreaMoving))
             {
-                Vector2 point = CastRay(groundMask).point;
+                Vector2 point = hit.point + offset;
                               
                 CurrentArea.SetPivotPosition();
-                CurrentArea.transform.position = point + offset;
+                CurrentArea.transform.position = new Vector2(Mathf.Clamp(point.x, -mapSizeX, mapSizeX),
+                    Mathf.Clamp(point.y, -mapSizeY, mapSizeY));
+            }
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            RaycastHit2D hit = CastRay(areaLayer);
+
+            if (hit.transform != null)
+            {
+                hit.transform.TryGetComponent(out AreaCollider aCollider);
+                Area area = aCollider.GetArea;
+
+                if ((area != null) && (!area.IsPlaced))
+                {
+                    area.Rotate();
+                }
             }
         }
     }

@@ -19,4 +19,20 @@ public class AreaCollider : MonoBehaviour
     {
         parentArea = area;
     }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.TryGetComponent(out AreaCollider area))
+        {
+            parentArea.IsTriggered(true);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.TryGetComponent(out AreaCollider area))
+        {
+            parentArea.IsTriggered(false);
+        }
+    }
 }

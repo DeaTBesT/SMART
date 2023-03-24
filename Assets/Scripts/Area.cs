@@ -7,10 +7,15 @@ public class Area : MonoBehaviour
     [SerializeField] private BoxCollider2D _collider2d;
     [SerializeField] private LayerMask areaMask;
 
+    [SerializeField] private bool isDebug;
+
     private bool isPlaced = false;
     public bool IsPlaced => isPlaced;
+    private bool isTriggered = false;
 
     private Vector2 pivotOffset;
+
+    private float currentRotationZ;
 
     private Controller controller;
     public Controller Controller 
@@ -24,6 +29,15 @@ public class Area : MonoBehaviour
     }
 
     private List<GameObject> cells;
+
+    private int sizeX;
+    private int sizeY;
+
+    private int mapSizeX;
+    private int mapSizeY;
+
+    private Vector2 startPoint;
+    private Vector2 endPoint;
 
     private void OnEnable()
     {
@@ -50,7 +64,74 @@ public class Area : MonoBehaviour
         //pivotOffset = new Vector2(areaPivot.transform.position.x - sizeX / 2, areaPivot.transform.position.y - sizeY/ 2);
         areaPivot.transform.position = pivotOffset;
         _collider2d.offset = new Vector2((sizeX - 1) / 2f, (sizeY - 1) / 2f);
-        _collider2d.size = new Vector2(sizeX, sizeY);
+        _collider2d.size = new Vector2(sizeX - 0.01f, sizeY - 0.01f);
+
+        this.sizeX = sizeX;
+        this.sizeY = sizeY;
+
+        mapSizeX = MapBuilder.Instance.MapSizeX / 2;
+        mapSizeY = MapBuilder.Instance.MapSizeY / 2;
+
+        startPoint.x = 0;
+        startPoint.y = 0;
+
+        endPoint.x = sizeX - 1;
+        endPoint.y = sizeY - 1;
+    }
+
+    public void Rotate()//0, 90, 180, 270
+    {
+        currentRotationZ += 90;
+
+        areaPivot.rotation = Quaternion.AngleAxis(currentRotationZ, Vector3.forward);
+
+        startPoint = Vector2.zero;
+        endPoint = Vector2.zero;
+
+        switch (currentRotationZ % 360)
+        {
+            case 90:
+                {
+                    startPoint.x = -sizeY + 1;
+                    startPoint.y = 0;
+
+                    endPoint.x = 0;
+                    endPoint.y = sizeX - 1;  
+                }
+                break;
+            case 180:
+                {
+                    startPoint.x = -sizeX + 1;
+                    startPoint.y = -sizeY + 1;
+
+                    endPoint.x = 0;
+                    endPoint.y = 0;
+                }
+                break;
+            case 270:
+                {
+                    startPoint.x = 0;
+                    startPoint.y = -sizeX + 1;
+
+                    endPoint.x = sizeY - 1;
+                    endPoint.y = 0;
+                }
+                break;
+            case 360:
+                {
+                    startPoint.x = 0;
+                    startPoint.y = 0;
+
+                    endPoint.x = sizeX - 1;
+                    endPoint.y = sizeY - 1;
+                }
+                break;
+        }
+    }
+
+    public void IsTriggered(bool _value)
+    {
+        isTriggered = _value;
     }
 
     public void AddCell(GameObject cell)
@@ -69,12 +150,16 @@ public class Area : MonoBehaviour
 
     public void SetPivotPosition()
     {
-        areaPivot.position = new Vector2(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
+        Vector2 pointPosition = new Vector2(Mathf.Clamp(transform.position.x, -mapSizeX + startPoint.x, mapSizeX - (endPoint.x + 1)),
+            Mathf.Clamp(transform.position.y, -mapSizeY + startPoint.y, mapSizeY - (endPoint.y + 1)));
+
+        areaPivot.position = new Vector2(Mathf.RoundToInt(pointPosition.x),
+            Mathf.RoundToInt(pointPosition.y));
     }
 
     public bool PlacingArea()
     {
-        if (!CheckIntersections())
+        if ((!CheckIntersections()) || (isTriggered))
         {
             return false;   
         }
@@ -126,9 +211,11 @@ public class Area : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        //Gizmos.DrawCube(new Vector2(areaPivot.position.x + _collider2d.size.x / 2 - 0.5f, areaPivot.position.y + _collider2d.size.y), new Vector2(_collider2d.size.x, 0.9f)); //Up
-        //Gizmos.DrawCube(new Vector2(areaPivot.position.x + _collider2d.size.x / 2 - 0.5f, areaPivot.position.y - 1), new Vector2(_collider2d.size.x, 0.9f)); //Down
-        //Gizmos.DrawCube(new Vector2(areaPivot.position.x + _collider2d.size.x, areaPivot.position.y + _collider2d.size.y / 2 - 0.5f), new Vector2(0.9f, _collider2d.size.y)); //Right
-        //Gizmos.DrawCube(new Vector2(areaPivot.position.x - 1, areaPivot.position.y + _collider2d.size.y / 2 - 0.5f), new Vector2(0.9f, _collider2d.size.y)); //Left
+        if (!isDebug) { return; }
+
+        Gizmos.DrawCube(new Vector2(areaPivot.position.x + startPoint.x + _collider2d.size.x / 2 - 0.5f, areaPivot.position.y + startPoint.y + _collider2d.size.y), new Vector2(_collider2d.size.x, 0.9f)) ; //Up
+        Gizmos.DrawCube(new Vector2(areaPivot.position.x + startPoint.x + _collider2d.size.x / 2 - 0.5f, areaPivot.position.y + startPoint.y - 1), new Vector2(_collider2d.size.x, 0.9f)); //Down
+        Gizmos.DrawCube(new Vector2(areaPivot.position.x + startPoint.x + _collider2d.size.x, areaPivot.position.y + startPoint.y + _collider2d.size.y / 2 - 0.5f), new Vector2(0.9f, _collider2d.size.y)); //Right
+        Gizmos.DrawCube(new Vector2(areaPivot.position.x + startPoint.x - 1, areaPivot.position.y + startPoint.y + _collider2d.size.y / 2 - 0.5f), new Vector2(0.9f, _collider2d.size.y)); //Left
     }
 }
