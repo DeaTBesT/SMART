@@ -85,11 +85,22 @@ public class Area : MonoBehaviour
 
         areaPivot.rotation = Quaternion.AngleAxis(currentRotationZ, Vector3.forward);
 
+        Debug.Log(currentRotationZ % 360);
+
         startPoint = Vector2.zero;
         endPoint = Vector2.zero;
 
         switch (currentRotationZ % 360)
         {
+            case 0:
+                {
+                    startPoint.x = 0;
+                    startPoint.y = 0;
+
+                    endPoint.x = sizeX - 1;
+                    endPoint.y = sizeY - 1;
+                }
+                break;
             case 90:
                 {
                     startPoint.x = -sizeY + 1;
@@ -117,15 +128,6 @@ public class Area : MonoBehaviour
                     endPoint.y = 0;
                 }
                 break;
-            case 360:
-                {
-                    startPoint.x = 0;
-                    startPoint.y = 0;
-
-                    endPoint.x = sizeX - 1;
-                    endPoint.y = sizeY - 1;
-                }
-                break;
         }
     }
 
@@ -150,8 +152,8 @@ public class Area : MonoBehaviour
 
     public void SetPivotPosition()
     {
-        Vector2 pointPosition = new Vector2(Mathf.Clamp(transform.position.x, -mapSizeX + startPoint.x, mapSizeX - (endPoint.x + 1)),
-            Mathf.Clamp(transform.position.y, -mapSizeY + startPoint.y, mapSizeY - (endPoint.y + 1)));
+        Vector2 pointPosition = new Vector2(Mathf.Clamp(transform.position.x, -mapSizeX - startPoint.x, mapSizeX - (endPoint.x + 1)),
+            Mathf.Clamp(transform.position.y, -mapSizeY - startPoint.y, mapSizeY - (endPoint.y + 1)));
 
         areaPivot.position = new Vector2(Mathf.RoundToInt(pointPosition.x),
             Mathf.RoundToInt(pointPosition.y));
