@@ -28,6 +28,7 @@ public class MapBuilder : Singleton<MapBuilder>
         public Vector2[] cellPositions;
         public GameObject[] cells;
         public Area areaCorner;
+        public List<Transform> vacantCells;
     }
 
     private void Awake()
@@ -75,7 +76,9 @@ public class MapBuilder : Singleton<MapBuilder>
             }
         }
 
-        parentMap.transform.position = new Vector2(Mathf.RoundToInt(parentMap.transform.position.x - sizeX / 2f), Mathf.RoundToInt(parentMap.transform.position.y - sizeY / 2f)) * spacing; 
+        parentMap.transform.position = new Vector2(Mathf.RoundToInt(parentMap.transform.position.x - sizeX / 2f), Mathf.RoundToInt(parentMap.transform.position.y - sizeY / 2f)) * spacing;
+
+        AddVacantPlaces();
     }
 
     private void SetupCorners()
@@ -86,6 +89,7 @@ public class MapBuilder : Singleton<MapBuilder>
         {
             corners[i].cellPositions = new Vector2[3];
             corners[i].cells = new GameObject[3];
+            corners[i].vacantCells = new List<Transform>();
         }
 
         //LD
@@ -109,6 +113,19 @@ public class MapBuilder : Singleton<MapBuilder>
         corners[3].cellPositions[2] = new Vector2(sizeX, sizeY - 1);
     }
 
+    private void AddVacantPlaces()
+    {
+        for (int i = 0; i < corners.Length; i++)
+        {
+            Corner corner = corners[i];
+
+            for (int j = 0; j < corner.cells.Length; j++)
+            {
+                corner.vacantCells.Add(corner.cells[j].transform);
+            }
+        }
+    }
+
     private void BuildCornens()
     {
         for (int i = 0; i < corners.Length; i++)
@@ -128,8 +145,9 @@ public class MapBuilder : Singleton<MapBuilder>
                 cell.AddComponent<AreaCollider>();
                 cell.TryGetComponent(out AreaCollider aCollider);
 
+                aCollider.SetActiveArea(false);
                 aCollider.SetArea(corner.areaCorner);
-                corner.areaCorner.AddCell(cell);
+                corner.areaCorner.AddCell(cell.transform);
 
                 cell.TryGetComponent(out SpriteRenderer sRenderer);
                 sRenderer.color = Color.black;

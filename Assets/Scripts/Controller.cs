@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Controller : MonoBehaviour
@@ -12,9 +13,17 @@ public class Controller : MonoBehaviour
     public Color TeamColor => teamColor;
     public int Score => score;
 
-    public virtual void SetMove()
+    protected List<Transform> vacantCells;
+
+    public void SetVacantCells(List<Transform> vacantCells)
     {
-       
+        this.vacantCells = vacantCells;
+    }
+
+    public virtual void SetMove(Area area)
+    {
+        CurrentArea = area;
+        Debug.Log($"Player is moving : {transform.name}");
     }
 
     public virtual void AddScore(int ammount)

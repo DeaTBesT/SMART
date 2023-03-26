@@ -1,4 +1,5 @@
 using UnityEngine;
+using static MapBuilder;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -30,13 +31,18 @@ public class GameManager : Singleton<GameManager>
 
     private void StartGame()
     {
-        GenerateArea().Controller = players[GetCurrentPlayer];
+        Area newArea = GenerateArea();
+        newArea.Controller = players[GetCurrentPlayer];
+        players[GetCurrentPlayer].SetMove(newArea);
     }
 
     public void EndMove()
     {
         currentPlayer++;
-        GenerateArea().Controller = players[GetCurrentPlayer];
+
+        Area newArea = GenerateArea();
+        newArea.Controller = players[GetCurrentPlayer];
+        players[GetCurrentPlayer].SetMove(newArea);
     }
 
     private Area GenerateArea()
@@ -46,6 +52,7 @@ public class GameManager : Singleton<GameManager>
 
         Instantiate(areaPrefab.gameObject, Vector2.zero, Quaternion.identity).TryGetComponent(out Area newArea);
         newArea.GenerateArea(cellPrefab, sizeX, sizeY);
+        newArea.m_AreaCollider.SetActiveArea(false);
 
         return newArea;
     }
@@ -56,7 +63,11 @@ public class GameManager : Singleton<GameManager>
         {
             int currentCorner = (i + Players) % Players + 1;
 
-            MapBuilder.Instance.Corners[currentCorner].areaCorner.Controller = players[i];
+            Corner selectedArea = MapBuilder.Instance.Corners[currentCorner];
+            selectedArea.areaCorner.Controller = players[i];
+            selectedArea.areaCorner.m_AreaCollider.SetActiveArea(true);
+            selectedArea.areaCorner.m_AreaCollider.gameObject.layer = 6;
+            players[i].SetVacantCells(selectedArea.vacantCells);
         }
     }
 }

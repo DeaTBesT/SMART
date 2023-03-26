@@ -3,36 +3,34 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider2D))]
 public class AreaCollider : MonoBehaviour
 {
+    [SerializeField] private int startLayer;
+    [SerializeField] private int placementLayer;
     [SerializeField] private Area parentArea;
+    private BoxCollider2D boxCollider;
 
     public Area GetArea => parentArea;
 
-    private void Start()
+    private void OnEnable()
     {
+        boxCollider = GetComponent<BoxCollider2D>();
+        boxCollider.isTrigger = true;
+        gameObject.layer = startLayer;
+
         if (parentArea == null)
         {
             parentArea = GetComponentInParent<Area>();
         }
+
+        parentArea.m_AreaCollider = this;
+    }
+
+    public void SetActiveArea(bool _value)
+    {
+        gameObject.layer = _value ? placementLayer : startLayer;
     }
 
     public void SetArea(Area area)
     {
         parentArea = area;
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.TryGetComponent(out AreaCollider area))
-        {
-            parentArea.IsTriggered(true);
-        }
-    }
-
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if (other.TryGetComponent(out AreaCollider area))
-        {
-            parentArea.IsTriggered(false);
-        }
     }
 }
