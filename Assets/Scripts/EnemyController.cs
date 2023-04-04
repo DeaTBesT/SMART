@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyController : Controller
@@ -15,40 +16,58 @@ public class EnemyController : Controller
         {
             Transform cell = vacantCells[i];
 
-            if (TryToPlace(cell.position.x + 1, cell.position.y) ||
-                TryToPlace(cell.position.x - 1, cell.position.y) ||
-                TryToPlace(cell.position.x, cell.position.y + 1) ||
-                TryToPlace(cell.position.x, cell.position.y - 1))
+            if (TryToPlace(cell.position.x + 1, cell.position.y, CurrentArea) ||
+                TryToPlace(cell.position.x - 1, cell.position.y, CurrentArea) ||
+                TryToPlace(cell.position.x, cell.position.y + 1, CurrentArea) ||
+                TryToPlace(cell.position.x, cell.position.y - 1, CurrentArea))
             {
-                vacantCells.RemoveAt(i);
                 vacantCells.AddRange(CurrentArea.GetCells);
-
+                CheckRemoveabelCells();
                 break;
             }
         }
     }
 
-    private bool TryToPlace(float _x, float _y)
+    private bool TryToPlace(float _x, float _y, Area currentArea)
     {
         bool isPlaced = false;
 
-        CurrentArea.transform.position = new Vector3(_x, _y, 0);
-        CurrentArea.SetPivotPosition();
+        currentArea.transform.position = new Vector3(_x, _y, 0);
+        currentArea.SetPivotPosition();
 
         for (int i = 0; i < 4; i++)
         {
-            if (CurrentArea.PlacingArea())
+            if (currentArea.PlacingArea())
             {
                 isPlaced = true;
                 break;
             }
             else
             {
-                isPlaced = false;
-                CurrentArea.Rotate();
+                currentArea.Rotate();
             }  
         }
     
         return isPlaced;
+    }
+
+    private void CheckRemoveabelCells()
+    {
+        List<Transform> removeableCells = new List<Transform>();
+
+        for (int i = 0; i < vacantCells.Count; i++)
+        {
+            Transform cell = vacantCells[i];
+
+            if (!GameManager.Instance.CheckVacantCell(cell))
+            {
+                removeableCells.Add(cell);
+            }
+        }
+
+        foreach (Transform _cell in removeableCells)
+        {
+            vacantCells.Remove(_cell);
+        }
     }
 }

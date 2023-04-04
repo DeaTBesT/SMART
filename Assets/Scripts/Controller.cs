@@ -30,4 +30,57 @@ public class Controller : MonoBehaviour
     {
         score += ammount;
     }
+
+    private bool IsCanPlace(float _x, float _y, Area currentArea)
+    {
+        bool isPlaced = false;
+
+        Vector2 startPosition = currentArea.transform.position;
+
+        currentArea.transform.position = new Vector3(_x, _y, 0);
+        currentArea.SetPivotPosition();
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (currentArea.IsCanPlace())
+            {
+                isPlaced = true;
+                break;
+            }
+            else
+            {
+                currentArea.Rotate();
+            }
+        }
+
+        currentArea.transform.position = startPosition;
+        currentArea.SetPivotPosition();
+
+        return isPlaced;
+    }
+
+    public bool IsAvaiableCells(Area area)
+    {
+        bool isAvaiableCells = false;
+
+        for (int i = 0; i < vacantCells.Count; i++)
+        {
+            Transform cell = vacantCells[i];
+
+            if (IsCanPlace(cell.position.x + 1, cell.position.y, area) ||
+                IsCanPlace(cell.position.x - 1, cell.position.y, area) ||
+                IsCanPlace(cell.position.x, cell.position.y + 1, area) ||
+                IsCanPlace(cell.position.x, cell.position.y - 1, area))
+            {
+                isAvaiableCells = true;
+                break;
+            }
+            else
+            {
+                isAvaiableCells = false;
+            }
+        }
+
+        return isAvaiableCells;
+    }
 }

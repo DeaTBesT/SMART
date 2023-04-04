@@ -323,8 +323,8 @@ MonoBehaviour:
   - {fileID: 713722023}
   cellPrefab: {fileID: 5877392737527975497, guid: 060f46beda361fb47bd547a9911ac6d6, type: 3}
   areaPrefab: {fileID: 3970421635293305813, guid: 11a3ee4c9e8d3424db63b3426180f000, type: 3}
-  isDebug: 1
-  areaSizeX: 3
+  isDebug: 0
+  areaSizeX: 2
   areaSizeY: 3
 --- !u!61 &1621120481
 BoxCollider2D:

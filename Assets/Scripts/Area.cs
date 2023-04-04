@@ -32,11 +32,17 @@ public class Area : MonoBehaviour
     private List<Transform> cells;
     public List<Transform> GetCells => cells;
 
+    public int GetSizeX => sizeX;
+    public int GetSizeY => sizeY;
+
     private int sizeX;
     private int sizeY;
 
     private int mapSizeX;
     private int mapSizeY;
+
+    public Vector2 GetStartPoint => startPoint;
+    public Vector2 GetEndPoint => endPoint;
 
     private Vector2 startPoint;
     private Vector2 endPoint;
@@ -51,13 +57,6 @@ public class Area : MonoBehaviour
 
     public void GenerateArea(GameObject cellPrefab, int sizeX, int sizeY)
     {
-
-#if UNITY_EDITOR
-
-        Debug.Log($"Area setup; SizeX : {sizeX}; SizeY : {sizeY}; Square : {sizeX * sizeY}");
-
-#endif
-
         for (int x = 0; x < sizeX; x++)
         {
              for (int y = 0; y < sizeY; y++)
@@ -98,7 +97,7 @@ public class Area : MonoBehaviour
 
         switch (currentRotationZ % 360)
         {
-            case 0:
+            default:
                 {
                     startPoint.x = 0;
                     startPoint.y = 0;
@@ -180,6 +179,16 @@ public class Area : MonoBehaviour
             Mathf.RoundToInt(pointPosition.y));
     }
 
+    public bool IsCanPlace()
+    {
+        if (!CheckIntersections())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public bool PlacingArea()
     {
         if (!CheckIntersections())
@@ -191,7 +200,7 @@ public class Area : MonoBehaviour
 
         m_AreaCollider.SetActiveArea(true);
         Controller.AddScore(1);
-        GameManager.Instance.EndMove();
+        GameManager.Instance.EndMove(this);
 
         return true;
     }

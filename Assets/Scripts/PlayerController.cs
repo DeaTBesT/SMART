@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : Controller
@@ -45,9 +46,13 @@ public class PlayerController : Controller
                     }
                     else
                     {
-                        CurrentArea.PlacingArea();
-                        StopAllCoroutines();
-                        isFirstPressed = false;
+                        if (CurrentArea.PlacingArea())
+                        {
+                            vacantCells.AddRange(CurrentArea.GetCells);
+                            StopAllCoroutines();
+                            isFirstPressed = false;
+                            CheckRemoveabelCells();
+                        }
                     }
                 }
             }
@@ -123,5 +128,31 @@ public class PlayerController : Controller
         yield return new WaitForSeconds(timeDelay);
 
         isFirstPressed = false;
+    }
+
+    public override void SetMove(Area area)
+    {
+        base.SetMove(area);
+    }
+
+    private void CheckRemoveabelCells()
+    {
+        List<Transform> removeableCells = new List<Transform>();
+
+        for (int i = 0; i < vacantCells.Count; i++)
+        {
+            Transform cell = vacantCells[i];
+
+            if (!GameManager.Instance.CheckVacantCell(cell))
+            {
+                removeableCells.Add(cell);
+            }
+        }
+
+
+        foreach (Transform _cell in removeableCells)
+        {
+            vacantCells.Remove(_cell);
+        }
     }
 }
