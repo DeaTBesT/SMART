@@ -19,6 +19,13 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
     private GameObject _parentMap;
     private Camera _camera;
 
+    [Header("Resource settings")]
+    [SerializeField] private int _resourceCount = 40;
+    [SerializeField] private GameObject _resourceIconPrefab;
+    [SerializeField] private ResourceType[] _resourceTypes;
+
+    private ResourceCell[,] _gridCells;
+
     public int MapSizeX => _sizeX;
     public int MapSizeY => _sizeY;
     public Vector2 MapCenter => _parentMap != null
@@ -76,6 +83,7 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
     private void BuildMap()
     {
         _parentMap = new GameObject("Map");
+        _gridCells = new ResourceCell[_sizeX, _sizeY];
 
         BuildCorners();
 
@@ -83,7 +91,10 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
         {
             for (var y = 0; y < _sizeY; y++)
             {
-                Instantiate(_prefabCell, new Vector2(x, y) * _spacing, Quaternion.identity, _parentMap.transform);
+                var cellObject = Instantiate(_prefabCell, new Vector2(x, y) * _spacing, Quaternion.identity, _parentMap.transform);
+                var resourceCell = cellObject.GetComponent<ResourceCell>() ?? cellObject.AddComponent<ResourceCell>();
+                resourceCell.Initialize(new Vector2Int(x, y));
+                _gridCells[x, y] = resourceCell;
             }
         }
 
@@ -91,6 +102,7 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
             Mathf.RoundToInt(_parentMap.transform.position.x - _sizeX / 2f),
             Mathf.RoundToInt(_parentMap.transform.position.y - _sizeY / 2f)) * _spacing;
 
+        GenerateResources();
         AddVacantPlaces();
     }
 
@@ -131,6 +143,81 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
                 corner.vacantCells.Add(t.transform);
             }
         }
+    }
+
+    private void GenerateResources()
+    {
+        if (_gridCells == null)
+        {
+            return;
+        }
+
+        var availablePositions = new List<Vector2Int>(_sizeX * _sizeY);
+        for (var x = 0; x < _sizeX; x++)
+        {
+            for (var y = 0; y < _sizeY; y++)
+            {
+                availablePositions.Add(new Vector2Int(x, y));
+            }
+        }
+
+        var resourcesToPlace = Mathf.Clamp(_resourceCount, 0, availablePositions.Count);
+        for (var i = 0; i < resourcesToPlace; i++)
+        {
+            var index = UnityEngine.Random.Range(0, availablePositions.Count);
+            var position = availablePositions[index];
+            availablePositions.RemoveAt(index);
+
+            var resourceType = GetRandomResourceType();
+            if (resourceType == ResourceType.None)
+            {
+                continue;
+            }
+
+            var resourceCell = _gridCells[position.x, position.y];
+            resourceCell.SetResource(resourceType, GetResourceAmount(resourceType), _resourceIconPrefab);
+        }
+    }
+
+    private ResourceType GetRandomResourceType()
+    {
+        if (_resourceTypes == null || _resourceTypes.Length == 0)
+        {
+            return ResourceType.Wood;
+        }
+
+        return _resourceTypes[UnityEngine.Random.Range(0, _resourceTypes.Length)];
+    }
+
+    private int GetResourceAmount(ResourceType resourceType)
+    {
+        return resourceType switch
+        {
+            ResourceType.Wood => 1,
+            ResourceType.Ore => 2,
+            _ => 0,
+        };
+    }
+
+    public bool TryGetCellAtWorldPosition(Vector2 worldPosition, out ResourceCell resourceCell)
+    {
+        resourceCell = null;
+        if (_parentMap == null)
+        {
+            return false;
+        }
+
+        var localPosition = worldPosition - (Vector2)_parentMap.transform.position;
+        var x = Mathf.RoundToInt(localPosition.x / _spacing);
+        var y = Mathf.RoundToInt(localPosition.y / _spacing);
+
+        if (x < 0 || x >= _sizeX || y < 0 || y >= _sizeY)
+        {
+            return false;
+        }
+
+        resourceCell = _gridCells[x, y];
+        return true;
     }
 
     private void BuildCorners()

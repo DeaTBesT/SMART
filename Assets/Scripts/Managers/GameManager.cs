@@ -36,6 +36,8 @@ public class GameManager : Singleton<GameManager>, IInitializable
 
     private void BeginTurn()
     {
+        ResourceManager.Instance?.CollectTurnResources();
+
         var newArea = CreateAreaForCurrentPlayer();
         newArea.Controller = _players[CurrentPlayerIndex];
         _players[CurrentPlayerIndex].SetMove(newArea);
@@ -52,6 +54,7 @@ public class GameManager : Singleton<GameManager>, IInitializable
         if (_players[CurrentPlayerIndex].HasAvailableMove(newArea))
         {
             _players[CurrentPlayerIndex].SetMove(newArea);
+            ResourceManager.Instance?.CollectTurnResources();
         }
         else
         {
