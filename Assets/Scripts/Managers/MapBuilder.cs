@@ -5,21 +5,25 @@ using UnityEngine;
 
 public class MapBuilder : Singleton<MapBuilder>, IInitializable
 {
-    [Header("Map settings")]
-    [SerializeField] private float _spacing;
+    [Header("Map settings")] [SerializeField]
+    private float _spacing;
+
     [SerializeField] private int _sizeX;
     [SerializeField] private int _sizeY;
     [SerializeField] private GameObject _prefabCell;
     [SerializeField] private BoxCollider2D _collider;
 
-    [Header("Camera settings")]
-    [SerializeField] private float _sizeOffset = 1;
+    [Header("Camera settings")] [SerializeField]
+    private float _sizeOffset = 1;
 
     private GameObject _parentMap;
     private Camera _camera;
 
     public int MapSizeX => _sizeX;
     public int MapSizeY => _sizeY;
+    public Vector2 MapCenter => _parentMap != null
+        ? _parentMap.transform.position + new Vector3((_sizeX - 1) * _spacing / 2f, (_sizeY - 1) * _spacing / 2f)
+        : Vector2.zero;
 
     public Corner[] Corners => _corners;
     private Corner[] _corners;
@@ -120,13 +124,11 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
 
     private void AddVacantPlaces()
     {
-        for (var i = 0; i < _corners.Length; i++)
+        foreach (var corner in _corners)
         {
-            var corner = _corners[i];
-
-            for (var j = 0; j < corner.cells.Length; j++)
+            foreach (var t in corner.cells)
             {
-                corner.vacantCells.Add(corner.cells[j].transform);
+                corner.vacantCells.Add(t.transform);
             }
         }
     }
@@ -135,10 +137,15 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
     {
         for (var i = 0; i < _corners.Length; i++)
         {
-            ref Corner corner = ref _corners[i];
+            ref var corner = ref _corners[i];
 
-            var areaCorner = new GameObject($"Corner {i}");
-            areaCorner.transform.parent = _parentMap.transform;
+            var areaCorner = new GameObject($"Corner {i}")
+            {
+                transform =
+                {
+                    parent = _parentMap.transform
+                }
+            };
             corner.areaCorner = areaCorner.AddComponent<Area>();
 
             for (var j = 0; j < corner.cellPositions.Length; j++)
@@ -159,8 +166,6 @@ public class MapBuilder : Singleton<MapBuilder>, IInitializable
         }
     }
 
-    private void SetupCamera()
-    {
+    private void SetupCamera() => 
         _camera.orthographicSize = _sizeX * _sizeY * _sizeOffset;
-    }
 }

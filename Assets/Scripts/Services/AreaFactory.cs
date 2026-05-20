@@ -23,8 +23,15 @@ public sealed class AreaFactory
         }
 
         area.GenerateArea(cellPrefab, width, height);
+        area.transform.position = GetInitialSpawnPosition(width, height);
         area.AreaCollider.SetActiveArea(false);
 
         return area;
+    }
+
+    private Vector2 GetInitialSpawnPosition(int width, int height)
+    {
+        var center = MapBuilder.Instance.MapCenter;
+        return center - new Vector2((width - 1) / 2f, (height - 1) / 2f);
     }
 }

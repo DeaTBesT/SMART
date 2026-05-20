@@ -144,6 +144,7 @@ public class Area : MonoBehaviour
             return false;
         }
 
+        
         IsPlaced = true;
         AreaCollider.SetActiveArea(true);
         Controller.AddScore(1);

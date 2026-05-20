@@ -6,8 +6,7 @@ using UnityEngine;
 
 public class PlayerController : Controller
 {
-    [Header("Layers")]
-    [SerializeField] private LayerMask _groundMask;
+    [Header("Layers")] [SerializeField] private LayerMask _groundMask;
     [SerializeField] private LayerMask _areaLayer;
 
     [SerializeField] private float _timeDelay;
@@ -84,6 +83,7 @@ public class PlayerController : Controller
 
         if (CurrentArea.PlacingArea())
         {
+            _isAreaMoving = false;
             _vacantCells.AddRange(CurrentArea.Cells);
             CancelPressDelay();
             _isFirstPressed = false;
@@ -150,7 +150,8 @@ public class PlayerController : Controller
 
     private RaycastHit2D CastRay(LayerMask layerMask)
     {
-        return Physics2D.Raycast(_camera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, Mathf.Infinity, layerMask);
+        return Physics2D.Raycast(_camera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, Mathf.Infinity,
+            layerMask);
     }
 
     private void StartPressDelay()
@@ -166,7 +167,7 @@ public class PlayerController : Controller
     {
         try
         {
-                await UniTask.Delay(TimeSpan.FromSeconds(_timeDelay), cancellationToken: cancellationToken);
+            await UniTask.Delay(TimeSpan.FromSeconds(_timeDelay), cancellationToken: cancellationToken);
             _isFirstPressed = false;
         }
         catch (OperationCanceledException)
@@ -192,4 +193,3 @@ public class PlayerController : Controller
         _vacantCells.RemoveAll(cell => !GameManager.Instance.CheckVacantCell(cell));
     }
 }
-

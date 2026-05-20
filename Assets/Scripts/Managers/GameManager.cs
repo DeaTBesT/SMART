@@ -76,7 +76,7 @@ public class GameManager : Singleton<GameManager>, IInitializable
     {
         for (var i = 0; i < Players; i++)
         {
-            var currentCorner = i % MapBuilder.Instance.Corners.Length;
+            var currentCorner = GetCornerIndex(i);
             var selectedArea = MapBuilder.Instance.Corners[currentCorner];
 
             selectedArea.areaCorner.Controller = _players[i];
@@ -84,6 +84,16 @@ public class GameManager : Singleton<GameManager>, IInitializable
             selectedArea.areaCorner.AreaCollider.gameObject.layer = 6;
             _players[i].SetVacantCells(selectedArea.vacantCells);
         }
+    }
+
+    private int GetCornerIndex(int playerIndex)
+    {
+        if (Players == 2)
+        {
+            return playerIndex == 0 ? 0 : 3;
+        }
+
+        return playerIndex % MapBuilder.Instance.Corners.Length;
     }
 
     private void FillVacantCells(Area area)
