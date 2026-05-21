@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Controllers;
 using Managers;
+using TMPro;
 using UnityEngine;
 
 namespace Gameplay
@@ -11,6 +12,8 @@ namespace Gameplay
         [SerializeField] private BoxCollider2D _collider2d;
         [SerializeField] private LayerMask _areaMask;
         [SerializeField] private bool _isDebug;
+        [SerializeField] private RectTransform _upgradeLabelRoot;
+        [SerializeField] private TextMeshProUGUI _upgradeLevelText;
 
         public bool IsPlaced { get; private set; }
         public AreaCollider AreaCollider { get; set; }
@@ -46,11 +49,13 @@ namespace Gameplay
         public void Upgrade()
         {
             _upgradeLevel++;
+            UpdateUpgradeLabel();
         }
 
         private void OnEnable()
         {
             _cells = new List<Transform>();
+            UpdateUpgradeLabel();
         }
 
         public void GenerateArea(GameObject cellPrefab, int sizeX, int sizeY)
@@ -77,6 +82,8 @@ namespace Gameplay
             _startPoint = Vector2.zero;
             _endPoint = new Vector2(sizeX - 1, sizeY - 1);
             _raySize = new Vector2(sizeX, sizeY);
+
+            UpdateUpgradeLabel();
         }
 
         public void Rotate()
@@ -110,6 +117,7 @@ namespace Gameplay
 
             SetPivotPosition();
             UpdateAreaPosition();
+            UpdateUpgradeLabel();
         }
 
         public void AddCell(Transform cell)
@@ -144,6 +152,25 @@ namespace Gameplay
                 Mathf.RoundToInt(_pointPosition.y));
         }
 
+        private void LateUpdate()
+        {
+            UpdateUpgradeLabel();
+        }
+
+        private void UpdateUpgradeLabel()
+        {
+            if (_upgradeLevelText == null || _upgradeLabelRoot == null)
+            {
+                return;
+            }
+
+            _upgradeLevelText.text = _upgradeLevel.ToString();
+
+            var areaCenter = (Vector2)_areaPivot.position + (_startPoint + _endPoint) * 0.5f;
+            _upgradeLabelRoot.position = areaCenter;
+            _upgradeLabelRoot.rotation = Quaternion.identity;
+        }
+
         public bool IsCanPlace()
         {
             return CheckIntersections();
@@ -161,25 +188,36 @@ namespace Gameplay
             Controller.AddScore(1);
             ResourceManager.Instance?.CaptureAreaResources(this);
             GameManager.Instance.EndMove(this);
-
+            UpdateUpgradeLabel();
+            
             return true;
         }
 
         private bool CheckIntersections()
         {
-            var u = CastBox(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f, _areaPivot.position.y + _startPoint.y + _raySize.y),
+            var u = CastBox(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y),
                 new Vector2(_raySize.x - 0.1f, 0.9f));
 
-            var d = CastBox(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f, _areaPivot.position.y + _startPoint.y - 1),
+            var d = CastBox(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
+                    _areaPivot.position.y + _startPoint.y - 1),
                 new Vector2(_raySize.x - 0.1f, 0.9f));
 
-            var r = CastBox(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x, _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
+            var r = CastBox(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
                 new Vector2(0.9f, _raySize.y - 0.1f));
 
-            var l = CastBox(new Vector2(_areaPivot.position.x + _startPoint.x - 1, _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
+            var l = CastBox(
+                new Vector2(_areaPivot.position.x + _startPoint.x - 1,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
                 new Vector2(0.9f, _raySize.y - 0.1f));
 
-            var c = CastBox(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f, _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
+            var c = CastBox(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
                 new Vector2(_raySize.x - 0.1f, _raySize.y - 0.1f));
 
             AreaCollider uAreaCollider = null;
@@ -187,7 +225,7 @@ namespace Gameplay
             AreaCollider rAreaCollider = null;
             AreaCollider lAreaCollider = null;
             AreaCollider cAreaCollider = null;
-        
+
             u.transform?.TryGetComponent(out uAreaCollider);
             d.transform?.TryGetComponent(out dAreaCollider);
             r.transform?.TryGetComponent(out rAreaCollider);
@@ -215,11 +253,22 @@ namespace Gameplay
                 return;
             }
 
-            Gizmos.DrawCube(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f, _areaPivot.position.y + _startPoint.y + _raySize.y), new Vector2(_raySize.x, 0.9f));
-            Gizmos.DrawCube(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f, _areaPivot.position.y + _startPoint.y - 1), new Vector2(_raySize.x, 0.9f));
-            Gizmos.DrawCube(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x, _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(0.9f, _raySize.y));
-            Gizmos.DrawCube(new Vector2(_areaPivot.position.x + _startPoint.x - 1, _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(0.9f, _raySize.y));
-            Gizmos.DrawCube(new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f, _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(_raySize.x - 0.1f, _raySize.y - 0.1f));
+            Gizmos.DrawCube(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y), new Vector2(_raySize.x, 0.9f));
+            Gizmos.DrawCube(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
+                    _areaPivot.position.y + _startPoint.y - 1), new Vector2(_raySize.x, 0.9f));
+            Gizmos.DrawCube(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(0.9f, _raySize.y));
+            Gizmos.DrawCube(
+                new Vector2(_areaPivot.position.x + _startPoint.x - 1,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(0.9f, _raySize.y));
+            Gizmos.DrawCube(
+                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
+                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
+                new Vector2(_raySize.x - 0.1f, _raySize.y - 0.1f));
         }
     }
 }
