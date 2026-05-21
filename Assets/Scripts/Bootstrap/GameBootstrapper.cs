@@ -3,22 +3,25 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-public class GameBootstrapper : MonoBehaviour
+namespace Bootstrap
 {
-    [SerializeField] private MonoBehaviour[] _initializables;
-
-    private async void Start()
+    public class GameBootstrapper : MonoBehaviour
     {
-        await BootstrapAsync(this.GetCancellationTokenOnDestroy());
-    }
+        [SerializeField] private MonoBehaviour[] _initializables;
 
-    public async UniTask BootstrapAsync(CancellationToken cancellationToken)
-    {
-        foreach (var initializable in _initializables.OfType<IInitializable>())
+        private async void Start()
         {
-            await initializable.InitializeAsync(cancellationToken);
+            await BootstrapAsync(this.GetCancellationTokenOnDestroy());
         }
 
-        Debug.Log("Bootstrap complete");
+        public async UniTask BootstrapAsync(CancellationToken cancellationToken)
+        {
+            foreach (var initializable in _initializables.OfType<IInitializable>())
+            {
+                await initializable.InitializeAsync(cancellationToken);
+            }
+
+            Debug.Log("Bootstrap complete");
+        }
     }
 }

@@ -62,7 +62,7 @@ GameObject:
   - component: {fileID: 3834834120793032584}
   - component: {fileID: 2988761996559653459}
   - component: {fileID: 5208943280044795552}
-  - component: {fileID: 8818598452361432826}
+  - component: {fileID: 1318400949689285980}
   m_Layer: 6
   m_Name: Collider
   m_TagString: Untagged
@@ -157,7 +157,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
---- !u!114 &8818598452361432826
+--- !u!114 &1318400949689285980
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

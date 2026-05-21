@@ -1,55 +1,59 @@
+using Managers;
 using TMPro;
 using UnityEngine;
 
-public class ResourcePanel : MonoBehaviour
+namespace UIModule
 {
-    [SerializeField] private int _teamId = 0;
-    [SerializeField] private TextMeshProUGUI _woodText;
-    [SerializeField] private TextMeshProUGUI _oreText;
-
-    public int TeamId => _teamId;
-
-    private void Awake()
+    public class ResourcePanel : MonoBehaviour
     {
-        SetResourceValues(0, 0);
-    }
+        [SerializeField] private int _teamId = 0;
+        [SerializeField] private TextMeshProUGUI _woodText;
+        [SerializeField] private TextMeshProUGUI _oreText;
 
-    private void OnEnable()
-    {
-        if (ResourceManager.Instance != null)
+        public int TeamId => _teamId;
+
+        private void Awake()
         {
-            ResourceManager.Instance.OnChangeResources += OnResourcesChanged;
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (ResourceManager.Instance != null)
-        {
-            ResourceManager.Instance.OnChangeResources -= OnResourcesChanged;
-        }
-    }
-
-    private void OnResourcesChanged(int teamId, int wood, int ore)
-    {
-        if (teamId != _teamId)
-        {
-            return;
+            SetResourceValues(0, 0);
         }
 
-        SetResourceValues(wood, ore);
-    }
-
-    public void SetResourceValues(int wood, int ore)
-    {
-        if (_woodText != null)
+        private void OnEnable()
         {
-            _woodText.text = $"Wood: {wood}";
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.OnChangeResources += OnResourcesChanged;
+            }
         }
 
-        if (_oreText != null)
+        private void OnDisable()
         {
-            _oreText.text = $"Ore: {ore}";
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.OnChangeResources -= OnResourcesChanged;
+            }
+        }
+
+        private void OnResourcesChanged(int teamId, int wood, int ore)
+        {
+            if (teamId != _teamId)
+            {
+                return;
+            }
+
+            SetResourceValues(wood, ore);
+        }
+
+        public void SetResourceValues(int wood, int ore)
+        {
+            if (_woodText != null)
+            {
+                _woodText.text = $"Wood: {wood}";
+            }
+
+            if (_oreText != null)
+            {
+                _oreText.text = $"Ore: {ore}";
+            }
         }
     }
 }

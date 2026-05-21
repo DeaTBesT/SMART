@@ -1,7 +1,10 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
-public interface IInitializable
+namespace Bootstrap
 {
-    UniTask InitializeAsync(CancellationToken cancellationToken);
+    public interface IInitializable
+    {
+        UniTask InitializeAsync(CancellationToken cancellationToken);
+    }
 }

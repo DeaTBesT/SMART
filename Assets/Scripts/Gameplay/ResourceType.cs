@@ -1,6 +1,9 @@
-public enum ResourceType
+namespace Gameplay
 {
-    None,
-    Wood,
-    Ore
+    public enum ResourceType
+    {
+        None,
+        Wood,
+        Ore
+    }
 }
