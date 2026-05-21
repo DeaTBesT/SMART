@@ -14,9 +14,11 @@ namespace Gameplay
 
         public bool IsPlaced { get; private set; }
         public AreaCollider AreaCollider { get; set; }
-        public List<Transform> Cells => _cells;
+        public List<Transform> Cells => _cells ??= new List<Transform>();
         public Vector2 StartPoint => _startPoint;
         public Vector2 EndPoint => _endPoint;
+        public int UpgradeLevel => _upgradeLevel;
+        public bool CanUpgrade => IsPlaced;
 
         private float _currentRotationZ;
         private Controller _controller;
@@ -29,6 +31,7 @@ namespace Gameplay
         private Vector2 _endPoint;
         private Vector2 _raySize;
         private Vector2 _pointPosition;
+        private int _upgradeLevel;
 
         public Controller Controller
         {
@@ -38,6 +41,11 @@ namespace Gameplay
                 _controller = value;
                 Redraw(_controller.TeamColor);
             }
+        }
+
+        public void Upgrade()
+        {
+            _upgradeLevel++;
         }
 
         private void OnEnable()

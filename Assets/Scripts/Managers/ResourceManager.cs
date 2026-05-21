@@ -54,48 +54,48 @@ namespace Managers
                 }
 
                 resourceCell.Capture(teamId);
-                Debug.Log($"Capture area {resourceCell.name} : {teamId}");
                 list.Add(resourceCell);
             }
 
             UpdateUi();
         }
 
-        public void CollectTurnResources()
+        public void CollectTurnResources(int teamId)
         {
-            Debug.Log("Collect resources");
-        
-            foreach (var kv in _capturedByTeam)
+            if (!_woodByTeam.ContainsKey(teamId))
             {
-                var teamId = kv.Key;
-                var list = kv.Value;
+                _woodByTeam[teamId] = 0;
+            }
 
-                if (!_woodByTeam.ContainsKey(teamId))
+            if (!_oreByTeam.ContainsKey(teamId))
+            {
+                _oreByTeam[teamId] = 0;
+            }
+
+            _woodByTeam[teamId] += 2;
+            _oreByTeam[teamId] += 2;
+
+            if (!_capturedByTeam.TryGetValue(teamId, out var list))
+            {
+                list = new List<ResourceCell>();
+                _capturedByTeam[teamId] = list;
+            }
+
+            foreach (var resourceCell in list)
+            {
+                if (!resourceCell.IsCaptured)
                 {
-                    _woodByTeam[teamId] = 0;
+                    continue;
                 }
 
-                if (!_oreByTeam.ContainsKey(teamId))
+                switch (resourceCell.ResourceType)
                 {
-                    _oreByTeam[teamId] = 0;
-                }
-
-                foreach (var resourceCell in list)
-                {
-                    if (!resourceCell.IsCaptured)
-                    {
-                        continue;
-                    }
-
-                    switch (resourceCell.ResourceType)
-                    {
-                        case ResourceType.Wood:
-                            _woodByTeam[teamId] += resourceCell.AmountPerTurn;
-                            break;
-                        case ResourceType.Ore:
-                            _oreByTeam[teamId] += resourceCell.AmountPerTurn;
-                            break;
-                    }
+                    case ResourceType.Wood:
+                        _woodByTeam[teamId] += resourceCell.AmountPerTurn;
+                        break;
+                    case ResourceType.Ore:
+                        _oreByTeam[teamId] += resourceCell.AmountPerTurn;
+                        break;
                 }
             }
 
@@ -110,6 +110,24 @@ namespace Managers
         public int GetOreForTeam(int teamId)
         {
             return _oreByTeam.TryGetValue(teamId, out var value) ? value : 0;
+        }
+
+        public bool HasResources(int teamId, int woodCost, int oreCost)
+        {
+            return GetWoodForTeam(teamId) >= woodCost && GetOreForTeam(teamId) >= oreCost;
+        }
+
+        public bool TrySpendResources(int teamId, int woodCost, int oreCost)
+        {
+            if (!HasResources(teamId, woodCost, oreCost))
+            {
+                return false;
+            }
+
+            _woodByTeam[teamId] -= woodCost;
+            _oreByTeam[teamId] -= oreCost;
+            UpdateUi();
+            return true;
         }
 
         public void UpdateUi()

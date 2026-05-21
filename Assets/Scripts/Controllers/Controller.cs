@@ -17,11 +17,11 @@ namespace Controllers
         public Color TeamColor => _teamColor;
         public int Score => _score;
 
-        protected List<Transform> _vacantCells;
+        protected List<Transform> _vacantCells = new List<Transform>();
 
         public void SetVacantCells(List<Transform> vacantCells)
         {
-            _vacantCells = vacantCells;
+            _vacantCells = vacantCells ?? new List<Transform>();
         }
 
         public virtual void SetMove(Area area)

@@ -39,6 +39,11 @@ namespace Controllers
 
         private void Update()
         {
+            if (Input.GetMouseButtonDown(0) && CurrentArea == null)
+            {
+                TrySelectOwnedArea();
+            }
+
             if (Input.GetMouseButtonDown(0) && CurrentArea != null)
             {
                 HandlePrimaryClick();
@@ -84,10 +89,11 @@ namespace Controllers
                 return;
             }
 
-            if (CurrentArea.PlacingArea())
+            var currentArea = CurrentArea;
+            if (currentArea.PlacingArea())
             {
                 _isAreaMoving = false;
-                _vacantCells.AddRange(CurrentArea.Cells);
+                _vacantCells.AddRange(currentArea.Cells);
                 CancelPressDelay();
                 _isFirstPressed = false;
                 UpdateVacantCells();
@@ -184,6 +190,24 @@ namespace Controllers
             _pressDelayCts?.Cancel();
             _pressDelayCts?.Dispose();
             _pressDelayCts = new CancellationTokenSource();
+        }
+
+        private void TrySelectOwnedArea()
+        {
+            var hit = CastRay(_areaLayer);
+            if (!hit)
+            {
+                return;
+            }
+
+            hit.transform.TryGetComponent(out AreaCollider areaCollider);
+            var area = areaCollider?.Area;
+            if (area == null || !area.IsPlaced || area.Controller != this)
+            {
+                return;
+            }
+
+            AreaSelectionManager.Instance?.SelectArea(area);
         }
 
         public override void SetMove(Area area)

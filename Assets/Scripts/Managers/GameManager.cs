@@ -12,12 +12,12 @@ namespace Managers
 {
     public class GameManager : Singleton<GameManager>, IInitializable
     {
+        public event Action<bool> OnPlayerTurnChanged;
         [SerializeField] private Controller[] _players;
         [SerializeField] private GameObject _cellPrefab;
         [SerializeField] private Area _areaPrefab;
 
-        [Header("Debug")]
-        [SerializeField] private bool _isDebug;
+        [Header("Debug")] [SerializeField] private bool _isDebug;
         [SerializeField] private int _areaSizeX;
         [SerializeField] private int _areaSizeY;
 
@@ -26,6 +26,7 @@ namespace Managers
         private Area[,] _vacantCells;
 
         public int Players => _players.Length;
+        public Controller CurrentPlayer => _players[CurrentPlayerIndex];
         private int CurrentPlayerIndex => (_currentPlayer + _players.Length) % _players.Length;
 
         public async UniTask InitializeAsync(CancellationToken cancellationToken)
@@ -43,30 +44,23 @@ namespace Managers
 
         private void BeginTurn()
         {
-            ResourceManager.Instance?.CollectTurnResources();
+            var currentPlayer = _players[CurrentPlayerIndex];
+            currentPlayer.CurrentArea = null;
+            AreaSelectionManager.Instance?.ClearSelection();
+            ResourceManager.Instance?.CollectTurnResources(currentPlayer.TeamID);
+            OnPlayerTurnChanged?.Invoke(currentPlayer is PlayerController);
 
-            var newArea = CreateAreaForCurrentPlayer();
-            newArea.Controller = _players[CurrentPlayerIndex];
-            _players[CurrentPlayerIndex].SetMove(newArea);
+            if (currentPlayer is EnemyController enemy)
+            {
+                enemy.TakeTurn();
+            }
         }
 
         public void EndMove(Area area)
         {
             FillVacantCells(area);
             _currentPlayer++;
-
-            var newArea = CreateAreaForCurrentPlayer();
-            newArea.Controller = _players[CurrentPlayerIndex];
-
-            if (_players[CurrentPlayerIndex].HasAvailableMove(newArea))
-            {
-                _players[CurrentPlayerIndex].SetMove(newArea);
-                ResourceManager.Instance?.CollectTurnResources();
-            }
-            else
-            {
-                EndGame(_players[CurrentPlayerIndex]);
-            }
+            BeginTurn();
         }
 
         public void EndGame(Controller controller)
@@ -80,6 +74,71 @@ namespace Managers
             var height = _isDebug ? _areaSizeY : UnityEngine.Random.Range(1, 6);
 
             return _areaFactory.CreateArea(_areaPrefab, _cellPrefab, width, height);
+        }
+
+        public bool CanCreateAreaForCurrentPlayer()
+        {
+            var currentPlayer = _players[CurrentPlayerIndex];
+            return currentPlayer is PlayerController && currentPlayer.CurrentArea == null &&
+                   ResourceManager.Instance != null &&
+                   ResourceManager.Instance.HasResources(currentPlayer.TeamID, 2, 2);
+        }
+
+        public bool TryCreateAreaForCurrentPlayer()
+        {
+            var currentPlayer = _players[CurrentPlayerIndex];
+            if (currentPlayer.CurrentArea != null)
+            {
+                return false;
+            }
+
+            if (ResourceManager.Instance == null ||
+                !ResourceManager.Instance.TrySpendResources(currentPlayer.TeamID, 2, 2))
+            {
+                return false;
+            }
+
+            AreaSelectionManager.Instance?.ClearSelection();
+            var newArea = CreateAreaForCurrentPlayer();
+            newArea.Controller = currentPlayer;
+            currentPlayer.SetMove(newArea);
+            return true;
+        }
+
+        public bool CanUpgradeSelectedArea()
+        {
+            var selectedArea = AreaSelectionManager.Instance?.SelectedArea;
+            return selectedArea != null && selectedArea.Controller == CurrentPlayer && selectedArea.CanUpgrade;
+        }
+
+        public bool TryUpgradeSelectedArea()
+        {
+            var selectedArea = AreaSelectionManager.Instance?.SelectedArea;
+            if (selectedArea == null || selectedArea.Controller != CurrentPlayer)
+            {
+                return false;
+            }
+
+            selectedArea.Upgrade();
+            AreaSelectionManager.Instance?.ClearSelection();
+            EndCurrentTurn();
+            return true;
+        }
+
+        public void OnCreateAreaButtonPressed()
+        {
+            TryCreateAreaForCurrentPlayer();
+        }
+
+        public void OnUpgradeAreaButtonPressed()
+        {
+            TryUpgradeSelectedArea();
+        }
+
+        public void EndCurrentTurn()
+        {
+            _currentPlayer++;
+            BeginTurn();
         }
 
         private void SetCorners()
