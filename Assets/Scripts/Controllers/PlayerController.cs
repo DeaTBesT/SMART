@@ -11,6 +11,7 @@ namespace Controllers
     {
         [Header("Layers")] [SerializeField] private LayerMask _groundMask;
         [SerializeField] private LayerMask _areaLayer;
+        [SerializeField] private LayerMask _selectingAreaLayer;
 
         [SerializeField] private float _timeDelay;
 
@@ -194,7 +195,7 @@ namespace Controllers
 
         private void TrySelectOwnedArea()
         {
-            var hit = CastRay(_areaLayer);
+            var hit = CastRay(_selectingAreaLayer);
             if (!hit)
             {
                 return;
@@ -207,6 +208,7 @@ namespace Controllers
                 return;
             }
 
+            AreaSelectionManager.Instance?.ClearSelection();
             AreaSelectionManager.Instance?.SelectArea(area);
         }
 

@@ -35,7 +35,9 @@ namespace Gameplay
         private Vector2 _raySize;
         private Vector2 _pointPosition;
         private int _upgradeLevel;
-
+        private bool _isSelected;
+        private Color _originalColor;
+        
         public Controller Controller
         {
             get => _controller;
@@ -56,8 +58,29 @@ namespace Gameplay
         {
             _cells = new List<Transform>();
             UpdateUpgradeLabel();
+            _originalColor = _controller?.TeamColor ?? Color.white;
+        }
+        
+        private void OnDisable()
+        {
+            SetSelected(false);
         }
 
+        public void SetSelected(bool isSelected)
+        {
+            _isSelected = isSelected;
+            if (isSelected)
+            {
+                var highlightColor = _controller.TeamColor * 1.5f;
+                highlightColor.a = 1f;
+                Redraw(highlightColor);
+            }
+            else
+            {
+                Redraw(_controller.TeamColor);
+            }
+        }
+        
         public void GenerateArea(GameObject cellPrefab, int sizeX, int sizeY)
         {
             _cells = new List<Transform>(sizeX * sizeY);

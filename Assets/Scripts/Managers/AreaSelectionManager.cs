@@ -1,6 +1,7 @@
 using System;
 using Core;
 using Gameplay;
+using UnityEngine;
 
 namespace Managers
 {
@@ -18,7 +19,7 @@ namespace Managers
             }
 
             SelectedArea = area;
-            OnSelectedAreaChanged?.Invoke(SelectedArea);
+            SelectedArea.SetSelected(true);
         }
 
         public void ClearSelection()
@@ -28,8 +29,8 @@ namespace Managers
                 return;
             }
 
+            SelectedArea.SetSelected(false);
             SelectedArea = null;
-            OnSelectedAreaChanged?.Invoke(null);
         }
     }
 }
