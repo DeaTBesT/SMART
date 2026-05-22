@@ -108,7 +108,14 @@ namespace Managers
         public bool CanUpgradeSelectedArea()
         {
             var selectedArea = AreaSelectionManager.Instance?.SelectedArea;
-            return selectedArea != null && selectedArea.Controller == CurrentPlayer && selectedArea.CanUpgrade;
+            if (selectedArea == null || selectedArea.Controller != CurrentPlayer || !selectedArea.CanUpgrade)
+            {
+                return false;
+            }
+
+            var upgradeCost = CalculateUpgradeCost(selectedArea);
+            return ResourceManager.Instance != null &&
+                   ResourceManager.Instance.HasResources(CurrentPlayer.TeamID, upgradeCost.wood, upgradeCost.ore);
         }
 
         public bool TryUpgradeSelectedArea()
@@ -119,10 +126,25 @@ namespace Managers
                 return false;
             }
 
+            var upgradeCost = CalculateUpgradeCost(selectedArea);
+            if (ResourceManager.Instance == null ||
+                !ResourceManager.Instance.TrySpendResources(CurrentPlayer.TeamID, upgradeCost.wood, upgradeCost.ore))
+            {
+                return false;
+            }
+
             selectedArea.Upgrade();
             AreaSelectionManager.Instance?.ClearSelection();
             EndCurrentTurn();
             return true;
+        }
+
+        private (int wood, int ore) CalculateUpgradeCost(Area area)
+        {
+            var cellCount = area.Cells.Count;
+            var woodCost = cellCount;
+            var oreCost = cellCount;
+            return (woodCost, oreCost);
         }
 
         public void OnCreateAreaButtonPressed()

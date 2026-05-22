@@ -20,6 +20,7 @@ namespace Managers
 
             SelectedArea = area;
             SelectedArea.SetSelected(true);
+            OnSelectedAreaChanged?.Invoke(SelectedArea);
         }
 
         public void ClearSelection()
@@ -31,6 +32,7 @@ namespace Managers
 
             SelectedArea.SetSelected(false);
             SelectedArea = null;
+            OnSelectedAreaChanged?.Invoke(null);
         }
     }
 }
