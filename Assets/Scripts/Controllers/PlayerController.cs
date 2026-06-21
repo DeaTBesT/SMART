@@ -64,10 +64,10 @@ namespace Controllers
                 ContinueDrag();
             }
 
-            if (Input.GetMouseButtonDown(1))
-            {
-                RotateCurrentArea();
-            }
+            // if (Input.GetMouseButtonDown(1))
+            // {
+            //     RotateCurrentArea();
+            // }
         }
 
         private void HandlePrimaryClick()
@@ -142,8 +142,14 @@ namespace Controllers
                 Mathf.Clamp(point.y, -_mapSizeY, _mapSizeY));
         }
 
-        private void RotateCurrentArea()
+        public void RotateCurrentArea()
         {
+            if (CurrentArea != null && !CurrentArea.IsPlaced)
+            {
+                CurrentArea.Rotate();
+                return;
+            }
+
             var hit = CastRay(_areaLayer);
             if (!hit.transform)
             {
