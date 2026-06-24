@@ -27,8 +27,7 @@ namespace Managers
 
         [Header("Resource settings")]
         [SerializeField] private int _resourceCount = 15;
-        [SerializeField] private GameObject _resourceIconPrefab;
-        [SerializeField] private ResourceType[] _resourceTypes;
+        [SerializeField] private ResourceConfig[] _resourceTypes;
 
         private ResourceCell[,] _gridCells;
 
@@ -51,6 +50,13 @@ namespace Managers
             public List<Transform> vacantCells;
         }
 
+        [System.Serializable]
+        public struct ResourceConfig
+        {
+            public ResourceType _resourceType;
+            public GameObject _resourceIconPrefab;
+        }
+        
         private void Awake()
         {
             _camera = Camera.main;
@@ -166,24 +172,19 @@ namespace Managers
                 var resourceCell = availableCells[index];
                 availableCells.RemoveAt(index);
 
-                var resourceType = GetRandomResourceType();
-                if (resourceType == ResourceType.None)
+                var resourceId = GetRandomResourceType();
+                if (_resourceTypes[resourceId]._resourceType == ResourceType.None)
                 {
                     continue;
                 }
 
-                resourceCell.SetResource(resourceType, GetResourceAmount(resourceType), _resourceIconPrefab);
+                resourceCell.SetResource(_resourceTypes[resourceId]._resourceType, GetResourceAmount(_resourceTypes[resourceId]._resourceType), _resourceTypes[resourceId]._resourceIconPrefab);
             }
         }
 
-        private ResourceType GetRandomResourceType()
+        private int GetRandomResourceType()
         {
-            if (_resourceTypes == null || _resourceTypes.Length == 0)
-            {
-                return ResourceType.Wood;
-            }
-
-            return _resourceTypes[UnityEngine.Random.Range(0, _resourceTypes.Length)];
+            return Random.Range(0, _resourceTypes.Length);
         }
 
         private int GetResourceAmount(ResourceType resourceType)

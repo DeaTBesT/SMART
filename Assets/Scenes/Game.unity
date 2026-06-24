@@ -787,8 +787,11 @@ MonoBehaviour:
   - {fileID: 1916266531}
   _sizeOffset: 0.04
   _resourceCount: 15
-  _resourceIconPrefab: {fileID: 0}
-  _resourceTypes: 0100000002000000
+  _resourceTypes:
+  - _resourceType: 1
+    _resourceIconPrefab: {fileID: 393757270716799756, guid: 04ed6fabbc3cd49439f4c4317ae64f34, type: 3}
+  - _resourceType: 2
+    _resourceIconPrefab: {fileID: 5245086019075826133, guid: 0751239843930e24183ab97ed2655223, type: 3}
   _corners:
   - cellPositions: []
     cells: []
@@ -13572,6 +13575,8 @@ MonoBehaviour:
   _createAreaButton: {fileID: 1296989247}
   _upgradeAreaButton: {fileID: 1172901021}
   _scoreText: {fileID: 1221672317}
+  _upgradeCostWoodText: {fileID: 1019203412}
+  _upgradeCostOreText: {fileID: 260050811}
 --- !u!1 &2140458491
 GameObject:
   m_ObjectHideFlags: 0

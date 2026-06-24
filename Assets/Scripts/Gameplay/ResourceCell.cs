@@ -43,7 +43,6 @@ namespace Gameplay
             {
                 _iconInstance = Instantiate(iconPrefab, transform);
                 _iconInstance.transform.localPosition = Vector3.zero;
-                _iconInstance.transform.localScale = Vector3.one;
                 return;
             }
 
