@@ -13,6 +13,7 @@ namespace Managers
     public class GameManager : Singleton<GameManager>, IInitializable
     {
         public event Action<bool> OnPlayerTurnChanged;
+        public event Action<Controller> OnGameEnded;
         [SerializeField] private Controller[] _players;
         [SerializeField] private GameObject _cellPrefab;
         [SerializeField] private Area _areaPrefab;
@@ -46,7 +47,6 @@ namespace Managers
         private void BeginTurn()
         {
             var currentPlayer = _players[CurrentPlayerIndex];
-         Debug.Log(currentPlayer);
             currentPlayer.CurrentArea = null;
             AreaSelectionManager.Instance?.ClearSelection();
             ResourceManager.Instance?.CollectTurnResources(currentPlayer.TeamID);
@@ -68,6 +68,23 @@ namespace Managers
         public void EndGame(Controller controller)
         {
             Debug.Log($"{controller.name} : End game");
+        }
+
+        private void FinishGame()
+        {
+            Controller winner = _players[0];
+
+            foreach (var player in _players)
+            {
+                if (player.Score > winner.Score)
+                {
+                    winner = player;
+                }
+            }
+
+            Debug.Log($"Game Over! Winner: {winner.name} with {winner.Score} points!");
+            OnGameEnded?.Invoke(winner);
+            EndGame(winner);
         }
 
         private Area CreateAreaForCurrentPlayer()
@@ -104,6 +121,16 @@ namespace Managers
             var newArea = CreateAreaForCurrentPlayer();
             newArea.Controller = currentPlayer;
             currentPlayer.SetMove(newArea);
+            
+            var canPlace = PlacementValidator.HasAvailableMove(newArea, currentPlayer.GetVacantCells());
+
+            if (!canPlace)
+            {
+                Destroy(newArea.gameObject);
+                FinishGame();
+                return false;
+            }
+            
             return true;
         }
 

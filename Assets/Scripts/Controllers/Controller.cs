@@ -25,6 +25,11 @@ namespace Controllers
             _vacantCells = vacantCells ?? new List<Transform>();
         }
 
+        public List<Transform> GetVacantCells()
+        {
+            return _vacantCells;
+        }
+
         public virtual void SetMove(Area area)
         {
             CurrentArea = area;
