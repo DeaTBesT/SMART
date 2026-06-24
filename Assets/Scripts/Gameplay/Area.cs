@@ -23,7 +23,7 @@ namespace Gameplay
         public List<Transform> Cells => _cells ??= new List<Transform>();
         public Vector2 StartPoint => _startPoint;
         public Vector2 EndPoint => _endPoint;
-        public int UpgradeLevel => _upgradeLevel;
+        public int UpgradeLevel => _upgradeLevel + 1;
         public bool CanUpgrade => IsPlaced && _isCanUpgraded;
 
         private float _currentRotationZ;
@@ -202,7 +202,7 @@ namespace Gameplay
                 return;
             }
 
-            _upgradeLevelText.text = _upgradeLevel.ToString();
+            _upgradeLevelText.text = UpgradeLevel.ToString();
 
             var areaCenter = (Vector2)_areaPivot.position + (_startPoint + _endPoint) * 0.5f;
             _upgradeLabelRoot.position = areaCenter;
