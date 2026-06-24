@@ -45,6 +45,7 @@ namespace Managers
         private void BeginTurn()
         {
             var currentPlayer = _players[CurrentPlayerIndex];
+         Debug.Log(currentPlayer);
             currentPlayer.CurrentArea = null;
             AreaSelectionManager.Instance?.ClearSelection();
             ResourceManager.Instance?.CollectTurnResources(currentPlayer.TeamID);
@@ -81,7 +82,7 @@ namespace Managers
             var currentPlayer = _players[CurrentPlayerIndex];
             return currentPlayer is PlayerController && currentPlayer.CurrentArea == null &&
                    ResourceManager.Instance != null &&
-                   ResourceManager.Instance.HasResources(currentPlayer.TeamID, 2, 2);
+                   ResourceManager.Instance.HasResources(currentPlayer.TeamID, 2, 0);
         }
 
         public bool TryCreateAreaForCurrentPlayer()
@@ -93,7 +94,7 @@ namespace Managers
             }
 
             if (ResourceManager.Instance == null ||
-                !ResourceManager.Instance.TrySpendResources(currentPlayer.TeamID, 2, 2))
+                !ResourceManager.Instance.TrySpendResources(currentPlayer.TeamID, 2, 0))
             {
                 return false;
             }

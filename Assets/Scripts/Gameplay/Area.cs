@@ -16,6 +16,7 @@ namespace Gameplay
         [SerializeField] private TextMeshProUGUI _upgradeLevelText;
 
         [SerializeField] private bool _isPlaced;
+        [SerializeField] private bool _isCanUpgrade = true;
         
         public bool IsPlaced { get => _isPlaced; private set => _isPlaced = value; }
         public AreaCollider AreaCollider { get; set; }
@@ -23,7 +24,7 @@ namespace Gameplay
         public Vector2 StartPoint => _startPoint;
         public Vector2 EndPoint => _endPoint;
         public int UpgradeLevel => _upgradeLevel;
-        public bool CanUpgrade => IsPlaced;
+        public bool CanUpgrade => IsPlaced && _isCanUpgrade;
 
         private float _currentRotationZ;
         [SerializeField] private Controller _controller;

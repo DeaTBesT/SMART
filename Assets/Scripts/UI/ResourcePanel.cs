@@ -47,12 +47,12 @@ namespace UIModule
         {
             if (_woodText != null)
             {
-                _woodText.text = $"Wood: {wood}";
+                _woodText.text = $"Дерево: {wood}";
             }
 
             if (_oreText != null)
             {
-                _oreText.text = $"Ore: {ore}";
+                _oreText.text = $"Камень: {ore}";
             }
         }
     }

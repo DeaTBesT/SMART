@@ -222,6 +222,7 @@ namespace Controllers
             var hit = CastRay(_selectingAreaLayer);
             if (!hit)
             {
+                AreaSelectionManager.Instance?.ClearSelection();
                 return;
             }
 

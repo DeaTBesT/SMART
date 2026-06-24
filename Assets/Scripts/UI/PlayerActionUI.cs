@@ -60,6 +60,8 @@ namespace UIModule
 
         private void OnSelectedAreaChanged(Area area)
         {
+            _upgradeAreaButton.gameObject.SetActive(area != null);
+            _createAreaButton.gameObject.SetActive(area == null);
             UpdatePanelState();
         }
 
