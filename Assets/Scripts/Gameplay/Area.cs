@@ -16,7 +16,7 @@ namespace Gameplay
         [SerializeField] private TextMeshProUGUI _upgradeLevelText;
 
         [SerializeField] private bool _isPlaced;
-        [SerializeField] private bool _isCanUpgrade = true;
+        [SerializeField] public bool _isCanUpgraded = true;
         
         public bool IsPlaced { get => _isPlaced; private set => _isPlaced = value; }
         public AreaCollider AreaCollider { get; set; }
@@ -24,7 +24,7 @@ namespace Gameplay
         public Vector2 StartPoint => _startPoint;
         public Vector2 EndPoint => _endPoint;
         public int UpgradeLevel => _upgradeLevel;
-        public bool CanUpgrade => IsPlaced && _isCanUpgrade;
+        public bool CanUpgrade => IsPlaced && _isCanUpgraded;
 
         private float _currentRotationZ;
         [SerializeField] private Controller _controller;
@@ -55,6 +55,12 @@ namespace Gameplay
         {
             _upgradeLevel++;
             UpdateUpgradeLabel();
+
+            if (_controller != null)
+            {
+                var upgradeScore = Cells.Count * 2;
+                _controller.AddScore(upgradeScore);
+            }
         }
 
         private void OnEnable()
@@ -217,7 +223,7 @@ namespace Gameplay
 
             IsPlaced = true;
             AreaCollider.SetActiveArea(true);
-            Controller.AddScore(1);
+            Controller.AddScore(Cells.Count * UpgradeLevel);
             ResourceManager.Instance?.CaptureAreaResources(this);
             GameManager.Instance.EndMove(this);
             UpdateUpgradeLabel();

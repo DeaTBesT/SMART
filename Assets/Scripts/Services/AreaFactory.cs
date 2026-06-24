@@ -29,7 +29,8 @@ namespace Services
             area.GenerateArea(cellPrefab, width, height);
             area.transform.position = GetInitialSpawnPosition(width, height);
             area.AreaCollider.SetActiveArea(false);
-
+            area._isCanUpgraded = true;
+                
             return area;
         }
 

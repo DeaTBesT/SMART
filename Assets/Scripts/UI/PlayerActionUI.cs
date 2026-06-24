@@ -1,6 +1,7 @@
 using Controllers;
 using Gameplay;
 using Managers;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,9 @@ namespace UIModule
         [SerializeField] private GameObject _panelRoot;
         [SerializeField] private Button _createAreaButton;
         [SerializeField] private Button _upgradeAreaButton;
+        [SerializeField] private TextMeshProUGUI _scoreText;
+
+        private Controller _currentScoreController;
 
         private void Awake()
         {
@@ -36,6 +40,8 @@ namespace UIModule
             {
                 AreaSelectionManager.Instance.OnSelectedAreaChanged += OnSelectedAreaChanged;
             }
+            
+            Controller.OnScoreChanged += UpdateScoreText;
 
             UpdatePanelState();
         }
@@ -51,6 +57,8 @@ namespace UIModule
             {
                 AreaSelectionManager.Instance.OnSelectedAreaChanged -= OnSelectedAreaChanged;
             }
+
+            Controller.OnScoreChanged -= UpdateScoreText;
         }
 
         private void OnPlayerTurnChanged(bool isPlayerTurn)
@@ -63,6 +71,31 @@ namespace UIModule
             _upgradeAreaButton.gameObject.SetActive(area != null);
             _createAreaButton.gameObject.SetActive(area == null);
             UpdatePanelState();
+        }
+
+        private void UpdateScoreText()
+        {
+            if (_scoreText == null || GameManager.Instance == null)
+            {
+                return;
+            }
+
+            var playerScore = 0;
+            var enemyScore = 0;
+
+            foreach (var controller in GameManager.Instance.PlayerControllers)
+            {
+                if (controller is PlayerController)
+                {
+                    playerScore = controller.Score;
+                }
+                else if (controller is EnemyController)
+                {
+                    enemyScore = controller.Score;
+                }
+            }
+
+            _scoreText.text = $"<color=#00A2FF>{playerScore}</color> : <color=#FF0000>{enemyScore}</color>";
         }
 
         private void UpdatePanelState()
@@ -84,6 +117,8 @@ namespace UIModule
             {
                 _upgradeAreaButton.interactable = isPlayerTurn && manager != null && manager.CanUpgradeSelectedArea();
             }
+
+            UpdateScoreText();
         }
 
         public void OnCreateAreaButtonClicked()

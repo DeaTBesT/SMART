@@ -26,6 +26,7 @@ namespace Managers
         private Area[,] _vacantCells;
 
         public int Players => _players.Length;
+        public Controller[] PlayerControllers => _players;
         public Controller CurrentPlayer => _players[CurrentPlayerIndex];
         private int CurrentPlayerIndex => (_currentPlayer + _players.Length) % _players.Length;
 

@@ -16,6 +16,7 @@ namespace Controllers
         public int TeamID => _teamId;
         public Color TeamColor => _teamColor;
         public int Score => _score;
+        public static event System.Action OnScoreChanged;
 
         protected List<Transform> _vacantCells = new List<Transform>();
 
@@ -33,6 +34,7 @@ namespace Controllers
         public virtual void AddScore(int amount)
         {
             _score += amount;
+            OnScoreChanged?.Invoke();
         }
 
         public bool HasAvailableMove(Area area)
