@@ -68,6 +68,25 @@ namespace Controllers
             }
 
             var selectedArea = ownedAreas[UnityEngine.Random.Range(0, ownedAreas.Count)];
+            
+            // Calculate upgrade cost
+            var cellCount = selectedArea.Cells.Count;
+            var levelMultiplier = selectedArea.UpgradeLevel + 1;
+            var woodCost = cellCount * 2 * levelMultiplier;
+            var oreCost = cellCount * 2 * levelMultiplier;
+
+            // Check and spend resources
+            if (ResourceManager.Instance == null || 
+                !ResourceManager.Instance.HasResources(TeamID, woodCost, oreCost))
+            {
+                return false;
+            }
+
+            if (!ResourceManager.Instance.TrySpendResources(TeamID, woodCost, oreCost))
+            {
+                return false;
+            }
+
             selectedArea.Upgrade();
             GameManager.Instance.EndCurrentTurn();
             return true;
