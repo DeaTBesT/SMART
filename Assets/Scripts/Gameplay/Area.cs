@@ -204,8 +204,29 @@ namespace Gameplay
 
             _upgradeLevelText.text = UpgradeLevel.ToString();
 
-            var areaCenter = (Vector2)_areaPivot.position + (_startPoint + _endPoint) * 0.5f;
-            _upgradeLabelRoot.position = areaCenter;
+            // Calculate center of all cells
+            if (_cells.Count == 0)
+            {
+                return;
+            }
+
+            Vector2 centerSum = Vector2.zero;
+            foreach (var cell in _cells)
+            {
+                centerSum += (Vector2)cell.position;
+            }
+            var areaCenter = centerSum / _cells.Count;
+
+            // Use anchoredPosition for UI elements
+            if (_upgradeLabelRoot is RectTransform rectTransform)
+            {
+                rectTransform.position = areaCenter;
+            }
+            else
+            {
+                _upgradeLabelRoot.position = areaCenter;
+            }
+            
             _upgradeLabelRoot.rotation = Quaternion.identity;
         }
 
