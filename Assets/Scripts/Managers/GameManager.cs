@@ -70,8 +70,8 @@ namespace Managers
 
         private Area CreateAreaForCurrentPlayer()
         {
-            var width = _isDebug ? _areaSizeX : UnityEngine.Random.Range(1, 6);
-            var height = _isDebug ? _areaSizeY : UnityEngine.Random.Range(1, 6);
+            var width = _isDebug ? _areaSizeX : UnityEngine.Random.Range(1, 3);
+            var height = _isDebug ? _areaSizeY : UnityEngine.Random.Range(1, 3);
 
             return _areaFactory.CreateArea(_areaPrefab, _cellPrefab, width, height);
         }
@@ -181,7 +181,7 @@ namespace Managers
         {
             if (Players == 2)
             {
-                return playerIndex == 0 ? 0 : 3;
+                return playerIndex == 0 ? 0 : 1;
             }
 
             return playerIndex % MapBuilder.Instance.Corners.Length;

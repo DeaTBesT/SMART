@@ -118,7 +118,16 @@ namespace Controllers
             }
 
             CurrentArea = area;
-            _offset = (Vector2)CurrentArea.transform.position - hit.point;
+            // compute offset relative to nearest map cell to snap correctly
+            if (MapBuilder.Instance.TryGetNearestCell(hit.point, out var rc))
+            {
+                _offset = (Vector2)CurrentArea.transform.position - (Vector2)rc.transform.position;
+            }
+            else
+            {
+                _offset = (Vector2)CurrentArea.transform.position - hit.point;
+            }
+
             _isAreaMoving = true;
         }
 
@@ -135,11 +144,20 @@ namespace Controllers
                 return;
             }
 
-            var point = hit.point + _offset;
+            var target = hit.point;
+            if (MapBuilder.Instance.TryGetNearestCell(target, out var rc))
+            {
+                CurrentArea.transform.position = (Vector2)rc.transform.position + _offset;
+            }
+            else
+            {
+                var point = target + _offset;
+                CurrentArea.transform.position = new Vector2(
+                    Mathf.Clamp(point.x, -_mapSizeX, _mapSizeX),
+                    Mathf.Clamp(point.y, -_mapSizeY, _mapSizeY));
+            }
+
             CurrentArea.SetPivotPosition();
-            CurrentArea.transform.position = new Vector2(
-                Mathf.Clamp(point.x, -_mapSizeX, _mapSizeX),
-                Mathf.Clamp(point.y, -_mapSizeY, _mapSizeY));
         }
 
         public void RotateCurrentArea()

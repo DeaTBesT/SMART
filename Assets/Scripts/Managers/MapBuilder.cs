@@ -16,8 +16,9 @@ namespace Managers
         [SerializeField] private int _sizeX;
         [SerializeField] private int _sizeY;
         [SerializeField] private GameObject _prefabCell;
-        [SerializeField] private BoxCollider2D _collider;
 
+        [SerializeField] private List<GameObject> _cells;
+        
         [Header("Camera settings")] [SerializeField]
         private float _sizeOffset = 1;
 
@@ -25,7 +26,7 @@ namespace Managers
         private Camera _camera;
 
         [Header("Resource settings")]
-        [SerializeField] private int _resourceCount = 40;
+        [SerializeField] private int _resourceCount = 15;
         [SerializeField] private GameObject _resourceIconPrefab;
         [SerializeField] private ResourceType[] _resourceTypes;
 
@@ -33,12 +34,13 @@ namespace Managers
 
         public int MapSizeX => _sizeX;
         public int MapSizeY => _sizeY;
+        public float Spacing => _spacing;
         public Vector2 MapCenter => _parentMap != null
             ? _parentMap.transform.position + new Vector3((_sizeX - 1) * _spacing / 2f, (_sizeY - 1) * _spacing / 2f)
             : Vector2.zero;
 
         public Corner[] Corners => _corners;
-        private Corner[] _corners;
+        [SerializeField] private Corner[] _corners;
 
         [System.Serializable]
         public struct Corner
@@ -57,11 +59,10 @@ namespace Managers
         public async UniTask InitializeAsync(CancellationToken cancellationToken)
         {
             _camera = Camera.main;
-            _collider.size = new Vector2(_sizeX, _sizeY);
 
             SetupCorners();
             BuildMap();
-            SetupCamera();
+            //SetupCamera();
 
             await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
         }
@@ -82,30 +83,41 @@ namespace Managers
 
             SetupCorners();
             BuildMap();
-            SetupCamera();
+            //SetupCamera();
         }
 
         private void BuildMap()
         {
-            _parentMap = new GameObject("Map");
-            _gridCells = new ResourceCell[_sizeX, _sizeY];
-
             BuildCorners();
+
+            _gridCells = new ResourceCell[_sizeX, _sizeY];
 
             for (var x = 0; x < _sizeX; x++)
             {
                 for (var y = 0; y < _sizeY; y++)
                 {
-                    var cellObject = Instantiate(_prefabCell, new Vector2(x, y) * _spacing, Quaternion.identity, _parentMap.transform);
-                    var resourceCell = cellObject.GetComponent<ResourceCell>() ?? cellObject.AddComponent<ResourceCell>();
-                    resourceCell.Initialize(new Vector2Int(x, y));
+                    var index = x + y * _sizeX;
+                    if (_cells == null || index < 0 || index >= _cells.Count)
+                    {
+                        _gridCells[x, y] = null;
+                        continue;
+                    }
+
+                    var go = _cells[index];
+                    if (go == null)
+                    {
+                        _gridCells[x, y] = null;
+                        continue;
+                    }
+
+                    var resourceCell = go.GetComponent<ResourceCell>();
                     _gridCells[x, y] = resourceCell;
+                    if (resourceCell != null)
+                    {
+                        resourceCell.name = $"Tile {x}x{y}";
+                    }
                 }
             }
-
-            _parentMap.transform.position = new Vector2(
-                Mathf.RoundToInt(_parentMap.transform.position.x - _sizeX / 2f),
-                Mathf.RoundToInt(_parentMap.transform.position.y - _sizeY / 2f)) * _spacing;
 
             GenerateResources();
             AddVacantPlaces();
@@ -113,30 +125,7 @@ namespace Managers
 
         private void SetupCorners()
         {
-            _corners = new Corner[4];
-
-            for (var i = 0; i < _corners.Length; i++)
-            {
-                _corners[i].cellPositions = new Vector2[3];
-                _corners[i].cells = new GameObject[3];
-                _corners[i].vacantCells = new List<Transform>();
-            }
-
-            _corners[0].cellPositions[0] = new Vector2(-1, -1);
-            _corners[0].cellPositions[1] = new Vector2(0, -1);
-            _corners[0].cellPositions[2] = new Vector2(-1, 0);
-
-            _corners[1].cellPositions[0] = new Vector2(_sizeX, -1);
-            _corners[1].cellPositions[1] = new Vector2(_sizeX - 1, -1);
-            _corners[1].cellPositions[2] = new Vector2(_sizeX, 0);
-
-            _corners[2].cellPositions[0] = new Vector2(-1, _sizeY);
-            _corners[2].cellPositions[1] = new Vector2(-1, _sizeY - 1);
-            _corners[2].cellPositions[2] = new Vector2(0, _sizeY);
-
-            _corners[3].cellPositions[0] = new Vector2(_sizeX, _sizeY);
-            _corners[3].cellPositions[1] = new Vector2(_sizeX - 1, _sizeY);
-            _corners[3].cellPositions[2] = new Vector2(_sizeX, _sizeY - 1);
+           
         }
 
         private void AddVacantPlaces()
@@ -152,26 +141,30 @@ namespace Managers
 
         private void GenerateResources()
         {
-            if (_gridCells == null)
+            if (_cells == null || _cells.Count == 0)
             {
                 return;
             }
 
-            var availablePositions = new List<Vector2Int>(_sizeX * _sizeY);
-            for (var x = 0; x < _sizeX; x++)
+            var availableCells = new List<ResourceCell>();
+            foreach (var go in _cells)
             {
-                for (var y = 0; y < _sizeY; y++)
-                {
-                    availablePositions.Add(new Vector2Int(x, y));
-                }
+                if (go == null) continue;
+                var rc = go.GetComponent<ResourceCell>();
+                if (rc != null) availableCells.Add(rc);
             }
 
-            var resourcesToPlace = Mathf.Clamp(_resourceCount, 0, availablePositions.Count);
+            if (availableCells.Count == 0)
+            {
+                return;
+            }
+
+            var resourcesToPlace = Mathf.Clamp(_resourceCount, 0, availableCells.Count);
             for (var i = 0; i < resourcesToPlace; i++)
             {
-                var index = UnityEngine.Random.Range(0, availablePositions.Count);
-                var position = availablePositions[index];
-                availablePositions.RemoveAt(index);
+                var index = UnityEngine.Random.Range(0, availableCells.Count);
+                var resourceCell = availableCells[index];
+                availableCells.RemoveAt(index);
 
                 var resourceType = GetRandomResourceType();
                 if (resourceType == ResourceType.None)
@@ -179,7 +172,6 @@ namespace Managers
                     continue;
                 }
 
-                var resourceCell = _gridCells[position.x, position.y];
                 resourceCell.SetResource(resourceType, GetResourceAmount(resourceType), _resourceIconPrefab);
             }
         }
@@ -229,33 +221,36 @@ namespace Managers
         {
             for (var i = 0; i < _corners.Length; i++)
             {
-                ref var corner = ref _corners[i];
+                _corners[i].areaCorner.AreaCollider.SetActiveArea(false);
+            }
+        }
 
-                var areaCorner = new GameObject($"Corner {i}")
+        public bool TryGetNearestCell(Vector2 worldPosition, out ResourceCell resourceCell)
+        {
+            resourceCell = null;
+            if (_cells == null || _cells.Count == 0)
+            {
+                return false;
+            }
+
+            float bestSqr = float.MaxValue;
+            ResourceCell best = null;
+            foreach (var go in _cells)
+            {
+                if (go == null) continue;
+                var rc = go.GetComponent<ResourceCell>();
+                if (rc == null) continue;
+
+                var d = ((Vector2)go.transform.position - worldPosition).sqrMagnitude;
+                if (d < bestSqr)
                 {
-                    transform =
-                    {
-                        parent = _parentMap.transform
-                    }
-                };
-                corner.areaCorner = areaCorner.AddComponent<Area>();
-
-                for (var j = 0; j < corner.cellPositions.Length; j++)
-                {
-                    var cell = Instantiate(_prefabCell, corner.cellPositions[j], Quaternion.identity, areaCorner.transform);
-                    corner.cells[j] = cell;
-
-                    cell.AddComponent<AreaCollider>();
-                    cell.TryGetComponent(out AreaCollider areaCollider);
-
-                    areaCollider.SetActiveArea(false);
-                    areaCollider.SetArea(corner.areaCorner);
-                    corner.areaCorner.AddCell(cell.transform);
-
-                    cell.TryGetComponent(out SpriteRenderer spriteRenderer);
-                    spriteRenderer.color = Color.black;
+                    bestSqr = d;
+                    best = rc;
                 }
             }
+
+            resourceCell = best;
+            return best != null;
         }
 
         private void SetupCamera() => 

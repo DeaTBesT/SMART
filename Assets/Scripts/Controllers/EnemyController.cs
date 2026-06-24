@@ -86,7 +86,7 @@ namespace Controllers
                 {
                     var currentArea = CurrentArea;
                     _vacantCells.AddRange(currentArea.Cells);
-                    UpdateVacantCells();
+                    ///UpdateVacantCells();
                     break;
                 }
             }
@@ -94,11 +94,18 @@ namespace Controllers
 
         private bool TryPlaceAt(float x, float y)
         {
+            // Snap target to nearest map cell; if none, don't attempt placement
+            var target = new Vector2(x, y);
+            if (!MapBuilder.Instance.TryGetNearestCell(target, out var nearestCell) || nearestCell == null)
+            {
+                return false;
+            }
+
             var isPlaced = false;
-            CurrentArea.transform.position = new Vector3(x, y, 0f);
+            CurrentArea.transform.position = nearestCell.transform.position;
             CurrentArea.SetPivotPosition();
 
-            for (var i = 0; i < 4; i++)
+            for (var r = 0; r < 4; r++)
             {
                 if (CurrentArea.PlacingArea())
                 {
@@ -110,11 +117,6 @@ namespace Controllers
             }
 
             return isPlaced;
-        }
-
-        private void UpdateVacantCells()
-        {
-            _vacantCells.RemoveAll(cell => !GameManager.Instance.CheckVacantCell(cell));
         }
     }
 }

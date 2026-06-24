@@ -15,7 +15,9 @@ namespace Gameplay
         [SerializeField] private RectTransform _upgradeLabelRoot;
         [SerializeField] private TextMeshProUGUI _upgradeLevelText;
 
-        public bool IsPlaced { get; private set; }
+        [SerializeField] private bool _isPlaced;
+        
+        public bool IsPlaced { get => _isPlaced; private set => _isPlaced = value; }
         public AreaCollider AreaCollider { get; set; }
         public List<Transform> Cells => _cells ??= new List<Transform>();
         public Vector2 StartPoint => _startPoint;
@@ -24,8 +26,8 @@ namespace Gameplay
         public bool CanUpgrade => IsPlaced;
 
         private float _currentRotationZ;
-        private Controller _controller;
-        private List<Transform> _cells;
+        [SerializeField] private Controller _controller;
+        [SerializeField] private List<Transform> _cells;
         private int _sizeX;
         private int _sizeY;
         private int _mapSizeX;
@@ -85,17 +87,21 @@ namespace Gameplay
         {
             _cells = new List<Transform>(sizeX * sizeY);
 
+            var spacing = MapBuilder.Instance?.Spacing ?? 1f;
+            _areaPivot.localPosition = Vector3.zero;
+
             for (var x = 0; x < sizeX; x++)
             {
                 for (var y = 0; y < sizeY; y++)
                 {
-                    _cells.Add(Instantiate(cellPrefab, new Vector2(x, y), Quaternion.identity, _areaPivot).transform);
+                    var go = Instantiate(cellPrefab, _areaPivot);
+                    go.transform.localPosition = new Vector3(x * spacing, y * spacing, 0f);
+                    _cells.Add(go.transform);
                 }
             }
 
-            _areaPivot.position = Vector2.zero;
-            _collider2d.offset = new Vector2((sizeX - 1) / 2f, (sizeY - 1) / 2f);
-            _collider2d.size = new Vector2(sizeX - 0.1f, sizeY - 0.1f);
+            _collider2d.offset = new Vector2((sizeX - 1) / 2f * spacing, (sizeY - 1) / 2f * spacing);
+            _collider2d.size = new Vector2(sizeX * spacing - 0.1f, sizeY * spacing - 0.1f);
 
             _sizeX = sizeX;
             _sizeY = sizeY;
@@ -161,18 +167,20 @@ namespace Gameplay
 
         public void SetPivotPosition()
         {
-            _pointPosition = new Vector2(
-                Mathf.Clamp(transform.position.x, -_mapSizeX - _startPoint.x, _mapSizeX - (_endPoint.x + 1)),
-                Mathf.Clamp(transform.position.y, -_mapSizeY - _startPoint.y, _mapSizeY - (_endPoint.y + 1)));
+            var worldPos = transform.position;
+            if (MapBuilder.Instance.TryGetNearestCell(worldPos, out var rc))
+            {
+                transform.position = rc.transform.position;
+                _pointPosition = rc.transform.position;
+            }
 
             UpdateAreaPosition();
         }
 
         private void UpdateAreaPosition()
         {
-            _areaPivot.position = new Vector2(
-                Mathf.RoundToInt(_pointPosition.x),
-                Mathf.RoundToInt(_pointPosition.y));
+            // area pivot uses local coordinates; align pivot world position with the area transform
+            _areaPivot.position = transform.position;
         }
 
         private void LateUpdate()
@@ -218,30 +226,32 @@ namespace Gameplay
 
         private bool CheckIntersections()
         {
+            var spacing = MapBuilder.Instance?.Spacing ?? 1f;
+
             var u = CastBox(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y),
-                new Vector2(_raySize.x - 0.1f, 0.9f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x / 2 - 0.5f) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y) * spacing),
+                new Vector2((_raySize.x - 0.1f) * spacing, 0.9f * spacing));
 
             var d = CastBox(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
-                    _areaPivot.position.y + _startPoint.y - 1),
-                new Vector2(_raySize.x - 0.1f, 0.9f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x / 2 - 0.5f) * spacing,
+                    _areaPivot.position.y + (_startPoint.y - 1) * spacing),
+                new Vector2((_raySize.x - 0.1f) * spacing, 0.9f * spacing));
 
             var r = CastBox(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
-                new Vector2(0.9f, _raySize.y - 0.1f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y / 2 - 0.5f) * spacing),
+                new Vector2(0.9f * spacing, (_raySize.y - 0.1f) * spacing));
 
             var l = CastBox(
-                new Vector2(_areaPivot.position.x + _startPoint.x - 1,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
-                new Vector2(0.9f, _raySize.y - 0.1f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x - 1) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y / 2 - 0.5f) * spacing),
+                new Vector2(0.9f * spacing, (_raySize.y - 0.1f) * spacing));
 
             var c = CastBox(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
-                new Vector2(_raySize.x - 0.1f, _raySize.y - 0.1f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x / 2 - 0.5f) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y / 2 - 0.5f) * spacing),
+                new Vector2((_raySize.x - 0.1f) * spacing, (_raySize.y - 0.1f) * spacing));
 
             AreaCollider uAreaCollider = null;
             AreaCollider dAreaCollider = null;
@@ -276,22 +286,24 @@ namespace Gameplay
                 return;
             }
 
+            var spacing = MapBuilder.Instance?.Spacing ?? 1f;
+
             Gizmos.DrawCube(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y), new Vector2(_raySize.x, 0.9f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x / 2 - 0.5f) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y) * spacing), new Vector2(_raySize.x * spacing, 0.9f * spacing));
             Gizmos.DrawCube(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
-                    _areaPivot.position.y + _startPoint.y - 1), new Vector2(_raySize.x, 0.9f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x / 2 - 0.5f) * spacing,
+                    _areaPivot.position.y + (_startPoint.y - 1) * spacing), new Vector2(_raySize.x * spacing, 0.9f * spacing));
             Gizmos.DrawCube(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(0.9f, _raySize.y));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y / 2 - 0.5f) * spacing), new Vector2(0.9f * spacing, _raySize.y * spacing));
             Gizmos.DrawCube(
-                new Vector2(_areaPivot.position.x + _startPoint.x - 1,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f), new Vector2(0.9f, _raySize.y));
+                new Vector2(_areaPivot.position.x + (_startPoint.x - 1) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y / 2 - 0.5f) * spacing), new Vector2(0.9f * spacing, _raySize.y * spacing));
             Gizmos.DrawCube(
-                new Vector2(_areaPivot.position.x + _startPoint.x + _raySize.x / 2 - 0.5f,
-                    _areaPivot.position.y + _startPoint.y + _raySize.y / 2 - 0.5f),
-                new Vector2(_raySize.x - 0.1f, _raySize.y - 0.1f));
+                new Vector2(_areaPivot.position.x + (_startPoint.x + _raySize.x / 2 - 0.5f) * spacing,
+                    _areaPivot.position.y + (_startPoint.y + _raySize.y / 2 - 0.5f) * spacing),
+                new Vector2((_raySize.x - 0.1f) * spacing, (_raySize.y - 0.1f) * spacing));
         }
     }
 }
