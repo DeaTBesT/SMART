@@ -199,21 +199,61 @@ namespace Managers
         public bool TryGetCellAtWorldPosition(Vector2 worldPosition, out ResourceCell resourceCell)
         {
             resourceCell = null;
-            if (_parentMap == null)
+            if (_gridCells == null)
             {
                 return false;
             }
 
-            var localPosition = worldPosition - (Vector2)_parentMap.transform.position;
-            var x = Mathf.RoundToInt(localPosition.x / _spacing);
-            var y = Mathf.RoundToInt(localPosition.y / _spacing);
+            if (_parentMap != null)
+            {
+                var localPosition = worldPosition - (Vector2)_parentMap.transform.position;
+                var x = Mathf.RoundToInt(localPosition.x / _spacing);
+                var y = Mathf.RoundToInt(localPosition.y / _spacing);
 
-            if (x < 0 || x >= _sizeX || y < 0 || y >= _sizeY)
+                if (x >= 0 && x < _sizeX && y >= 0 && y < _sizeY)
+                {
+                    resourceCell = _gridCells[x, y];
+                    return resourceCell != null;
+                }
+            }
+
+            if (_cells == null || _cells.Count == 0)
             {
                 return false;
             }
 
-            resourceCell = _gridCells[x, y];
+            float bestSqr = float.MaxValue;
+            ResourceCell best = null;
+            var maxDistance = _spacing * 0.6f;
+            var maxDistanceSqr = maxDistance * maxDistance;
+
+            foreach (var go in _cells)
+            {
+                if (go == null)
+                {
+                    continue;
+                }
+
+                var rc = go.GetComponent<ResourceCell>();
+                if (rc == null)
+                {
+                    continue;
+                }
+
+                var d = ((Vector2)go.transform.position - worldPosition).sqrMagnitude;
+                if (d < bestSqr)
+                {
+                    bestSqr = d;
+                    best = rc;
+                }
+            }
+
+            if (best == null || bestSqr > maxDistanceSqr)
+            {
+                return false;
+            }
+
+            resourceCell = best;
             return true;
         }
 
@@ -235,6 +275,9 @@ namespace Managers
 
             float bestSqr = float.MaxValue;
             ResourceCell best = null;
+            var maxDistance = _spacing * 0.6f;
+            var maxDistanceSqr = maxDistance * maxDistance;
+
             foreach (var go in _cells)
             {
                 if (go == null) continue;
@@ -249,8 +292,13 @@ namespace Managers
                 }
             }
 
+            if (best == null || bestSqr > maxDistanceSqr)
+            {
+                return false;
+            }
+
             resourceCell = best;
-            return best != null;
+            return true;
         }
 
         private void SetupCamera() => 

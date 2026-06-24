@@ -43,12 +43,17 @@ namespace Managers
 
             foreach (var cell in area.Cells)
             {
-                if (!MapBuilder.Instance.TryGetCellAtWorldPosition(cell.position, out var resourceCell))
+                if (!MapBuilder.Instance.TryGetNearestCell(cell.position, out var resourceCell))
                 {
                     continue;
                 }
 
                 if (!resourceCell.CanCapture)
+                {
+                    continue;
+                }
+
+                if (list.Contains(resourceCell))
                 {
                     continue;
                 }
