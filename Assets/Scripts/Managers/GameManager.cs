@@ -135,6 +135,8 @@ namespace Managers
                 return false;
             }
 
+            Debug.Log($"Upgrade: {upgradeCost.wood} : {upgradeCost.ore}");
+            
             selectedArea.Upgrade();
             AreaSelectionManager.Instance?.ClearSelection();
             EndCurrentTurn();
@@ -144,8 +146,9 @@ namespace Managers
         private (int wood, int ore) CalculateUpgradeCost(Area area)
         {
             var cellCount = area.Cells.Count;
-            var woodCost = cellCount;
-            var oreCost = cellCount;
+            var levelMultiplier = area.UpgradeLevel + 1; // next level multiplier
+            var woodCost = cellCount * 2 * levelMultiplier;
+            var oreCost = cellCount * 2 * levelMultiplier;
             return (woodCost, oreCost);
         }
 

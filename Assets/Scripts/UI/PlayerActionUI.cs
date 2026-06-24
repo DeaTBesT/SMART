@@ -13,8 +13,12 @@ namespace UIModule
         [SerializeField] private Button _createAreaButton;
         [SerializeField] private Button _upgradeAreaButton;
         [SerializeField] private TextMeshProUGUI _scoreText;
+        [SerializeField] private TextMeshProUGUI _upgradeCostWoodText;
+        [SerializeField] private TextMeshProUGUI _upgradeCostOreText;
 
         private Controller _currentScoreController;
+        private System.Action<int> _scoreChangedHandler;
+        private Area _selectedArea;
 
         private void Awake()
         {
@@ -68,9 +72,11 @@ namespace UIModule
 
         private void OnSelectedAreaChanged(Area area)
         {
+            _selectedArea = area;
             _upgradeAreaButton.gameObject.SetActive(area != null);
             _createAreaButton.gameObject.SetActive(area == null);
             UpdatePanelState();
+            UpdateUpgradeCostDisplay();
         }
 
         private void UpdateScoreText()
@@ -119,6 +125,7 @@ namespace UIModule
             }
 
             UpdateScoreText();
+            UpdateUpgradeCostDisplay();
         }
 
         public void OnCreateAreaButtonClicked()
@@ -131,6 +138,22 @@ namespace UIModule
         {
             GameManager.Instance?.OnUpgradeAreaButtonPressed();
             UpdatePanelState();
+        }
+
+        private void UpdateUpgradeCostDisplay()
+        {
+            if (_selectedArea == null)
+            {
+                return;
+            }
+            
+            var cellCount = _selectedArea.Cells.Count;
+            var multiplier = _selectedArea.UpgradeLevel + 1;
+            var wood = cellCount * 2 * multiplier;
+            var ore = cellCount * 2 * multiplier;
+
+            _upgradeCostWoodText.text = $"{wood}";
+            _upgradeCostOreText.text = $"{ore}";
         }
     }
 }
