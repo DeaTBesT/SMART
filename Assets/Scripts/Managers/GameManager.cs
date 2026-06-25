@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using Gameplay;
 using Services;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Managers
 {
@@ -281,6 +282,11 @@ namespace Managers
         private bool IsInBounds(int x, int y)
         {
             return x >= 0 && x < _vacantCells.GetLength(0) && y >= 0 && y < _vacantCells.GetLength(1);
+        }
+
+        public void OnClickRestart()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
 }

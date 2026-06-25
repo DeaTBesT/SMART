@@ -107,6 +107,12 @@ namespace UIModule
         private void UpdatePanelState()
         {
             var manager = GameManager.Instance;
+
+            if (manager == null)
+            {
+                return;
+            }
+            
             var isPlayerTurn = manager != null && manager.CurrentPlayer is PlayerController;
 
             if (_panelRoot != null)
