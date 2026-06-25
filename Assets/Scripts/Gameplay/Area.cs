@@ -47,7 +47,14 @@ namespace Gameplay
             set
             {
                 _controller = value;
-                Redraw(_controller.TeamColor);
+                if (IsPlaced)
+                {
+                    Redraw(_controller.TeamColor);
+                }
+                else
+                {
+                    Redraw(Color.yellow);
+                }
             }
         }
 
@@ -244,6 +251,7 @@ namespace Gameplay
 
             IsPlaced = true;
             AreaCollider.SetActiveArea(true);
+            Redraw(_controller.TeamColor);
             Controller.AddScore(Cells.Count * UpgradeLevel);
             ResourceManager.Instance?.CaptureAreaResources(this);
             GameManager.Instance.EndMove(this);
