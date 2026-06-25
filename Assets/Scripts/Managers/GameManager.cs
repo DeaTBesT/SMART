@@ -288,5 +288,10 @@ namespace Managers
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
+        
+        public void OnClickMenu()
+        {
+            SceneManager.LoadScene(0);
+        }
     }
 }
