@@ -17,6 +17,8 @@ namespace Gameplay
 
         [SerializeField] private bool _isPlaced;
         [SerializeField] public bool _isCanUpgraded = true;
+
+        [SerializeField] private ParticleSystem _particleUpgrade;
         
         public bool IsPlaced { get => _isPlaced; private set => _isPlaced = value; }
         public AreaCollider AreaCollider { get; set; }
@@ -126,6 +128,9 @@ namespace Gameplay
             _endPoint = new Vector2(sizeX - 1, sizeY - 1);
             _raySize = new Vector2(sizeX, sizeY);
 
+            var shape =_particleUpgrade.shape; 
+            shape.scale = _collider2d.size;
+            
             UpdateUpgradeLabel();
         }
 
