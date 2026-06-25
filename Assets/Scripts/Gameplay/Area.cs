@@ -70,6 +70,8 @@ namespace Gameplay
                 var upgradeScore = Cells.Count * 2;
                 _controller.AddScore(upgradeScore);
             }
+            
+            _particleUpgrade.Play();
         }
 
         private void OnEnable()
@@ -128,10 +130,12 @@ namespace Gameplay
             _endPoint = new Vector2(sizeX - 1, sizeY - 1);
             _raySize = new Vector2(sizeX, sizeY);
 
-            var shape =_particleUpgrade.shape; 
+            var shape = _particleUpgrade.shape; 
             shape.scale = _collider2d.size;
-            
+
             UpdateUpgradeLabel();
+            
+            _particleUpgrade.transform.localPosition = _upgradeLabelRoot.position;
         }
 
         public void Rotate()
