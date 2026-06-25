@@ -18,6 +18,11 @@ namespace Managers
         [SerializeField] private GameObject _cellPrefab;
         [SerializeField] private Area _areaPrefab;
 
+        [SerializeField] private GameObject _buttonGameGrid;
+        [SerializeField] private GameObject _buttonEndGameGrid;
+        [SerializeField] private GameObject _winPanel;
+        [SerializeField] private GameObject _goPanel;
+        
         [Header("Debug")] [SerializeField] private bool _isDebug;
         [SerializeField] private int _areaSizeX;
         [SerializeField] private int _areaSizeY;
@@ -67,7 +72,17 @@ namespace Managers
 
         public void EndGame(Controller controller)
         {
-            Debug.Log($"{controller.name} : End game");
+            _buttonGameGrid.SetActive(false);
+            _buttonEndGameGrid.SetActive(true);
+            
+            if (controller is PlayerController)
+            {
+                _winPanel.SetActive(true);
+            }
+            else
+            {
+                _goPanel.SetActive(true);
+            }
         }
 
         private void FinishGame()
